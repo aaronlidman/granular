@@ -1,0 +1,11 @@
+#!/usr/bin/env node
+'use strict';
+
+const fs = require('fs');
+const zlib = require('zlib');
+const parse = require('../lib/parse.js');
+
+var fd = fs.createReadStream('/Users/alidman/granular/' + process.argv[2])
+    .pipe(zlib.createGunzip());
+
+parse.change(fd);

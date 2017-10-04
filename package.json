@@ -1,0 +1,31 @@
+{
+  "name": "osm-dash",
+  "version": "0.0.0",
+  "description": "An dashboard showing what's happening in OSM; like an activity monitor.",
+  "bin": {
+    "cli": "bin/cli"
+  },
+  "engines": {
+    "node": "6.10"
+  },
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Aaron Lidman",
+  "license": "ISC",
+  "dependencies": {
+    "sax": "^1.2.4"
+  },
+  "devDependencies": {
+    "eslint": "^4.8.0",
+    "eslint-config-mourner": "^2.0.3"
+  },
+  "eslintConfig": {
+    "extends": "mourner",
+    "rules": {
+      "new-cap": 0,
+      "consistent-return": 0
+    }
+  }
+}
