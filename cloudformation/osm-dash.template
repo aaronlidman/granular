@@ -1,0 +1,110 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "osm-dash",
+    "Parameters": {
+        "GitSha": {
+            "Type": "String"
+        },
+        "MainBucket": {
+            "Type": "String",
+            "Default": ""
+        },
+        "SlugPrefix": {
+            "Type": "String",
+            "Default": "slugs/osm-dash"
+        },
+        "SummaryDestination": {
+            "Description": "S3 location to put the summary files",
+            "Type": "String",
+            "Default": "osm-dash/summaries/"
+        }
+    },
+    "Resources": {
+        "LambdaRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "Path": "/stack/lambda/",
+                "Policies": [{
+                    "PolicyName": "osm-dash",
+                    "PolicyDocument": {
+                        "Statement": [{
+                            "Effect": "Allow",
+                            "Action": [
+                                "s3:DeleteObject",
+                                "s3:GetObject",
+                                "s3:PutObject"
+                            ],
+                            "Resource": [
+                                {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "arn:aws:s3:::",
+                                            { "Ref": "MainBucket" },
+                                            "/*"
+                                        ]
+                                    ]
+                                }
+                            ],
+                            "Condition": {
+                                "StringLike": {
+                                    "s3:prefix": {
+                                        "Fn::Join": [
+                                            "",
+                                            [
+                                                { "Ref": "SummaryDestination" },
+                                                "/*"
+                                            ]
+                                        ]
+                                    }
+                                }
+                            }
+                        }]
+                    }
+                }]
+            }
+        },
+        "MinutelyLambda": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "S3Bucket": {
+                        "Ref": "MainBucket"
+                    },
+                    "S3Key": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                { "Ref": "SlugPrefix"},
+                                { "Ref": "GitSha" },
+                                ".zip"
+                            ]
+                        ]
+                    }
+                },
+                "FunctionName": "OSMDashMinutely",
+                "Handler": "index.handler",
+                "Runtime": "nodejs6.10",
+                "Timeout": 150,
+                "MemorySize": 128,
+                "Role": {
+                    "Fn::GetAtt": [
+                        "LambdaRole",
+                        "Arn"
+                    ]
+                }
+            }
+        }
+    }
+}
