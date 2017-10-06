@@ -11,7 +11,7 @@
         },
         "SlugPrefix": {
             "Type": "String",
-            "Default": "slugs/osm-dash"
+            "Default": "slugs/osm-dash/"
         },
         "SummaryDestination": {
             "Description": "S3 location to put the summary files",
