@@ -106,5 +106,19 @@
                 }
             }
         }
+    },
+    "Outputs": {
+        "SlugLocation": {
+            "Value": {
+                "Fn::Join": [
+                    "",
+                    [
+                        { "Ref": "SlugPrefix"},
+                        { "Ref": "GitSha" },
+                        ".zip"
+                    ]
+                ]
+            }
+        }
     }
 }
