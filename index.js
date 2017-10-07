@@ -10,9 +10,7 @@ module.exports.handler = function () {
         .then(parse.state)
         .then(request.getStream)
         .then(parse.change)
-        .then((stats) => {
-            cwput.overallMetrics(stats['_overall']);
-        })
+        .then(cwput.overallMetrics)
         .then((stats) => {
             console.log('user,c_nodes,m_nodes,d_nodes,c_ways,m_ways,d_ways,c_relations,m_relations,d_relations');
             for (const user in stats) {
