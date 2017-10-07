@@ -15,6 +15,7 @@
   "author": "Aaron Lidman",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.133.0",
     "sax": "^1.2.4"
   },
   "devDependencies": {

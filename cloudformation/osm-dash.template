@@ -39,6 +39,14 @@
                     "PolicyName": "osm-dash",
                     "PolicyDocument": {
                         "Statement": [{
+                            "Action": [
+                                "cloudwatch:PutMetricData",
+                                "cloudwatch:GetMetricStatistics"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": "*"
+                        },
+                        {
                             "Effect": "Allow",
                             "Action": [
                                 "logs:*"
