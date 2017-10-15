@@ -6,6 +6,8 @@ const request = require('./lib/request.js');
 const cwput = require('./lib/cwput.js');
 
 module.exports.handler = function () {
+    console.log(process.env);
+
     request.get(config.base_url + config.replication_dir + 'state.txt')
         .then(parse.state)
         .then(request.getStream)

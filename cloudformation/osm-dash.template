@@ -13,10 +13,9 @@
             "Type": "String",
             "Default": "slugs/osm-dash/"
         },
-        "SummaryDestination": {
-            "Description": "S3 location to put the summary files",
+        "Environment": {
             "Type": "String",
-            "Default": "osm-dash/summaries/"
+            "Default": "staging"
         }
     },
     "Resources": {
@@ -70,20 +69,7 @@
                                         ]
                                     ]
                                 }
-                            ],
-                            "Condition": {
-                                "StringLike": {
-                                    "s3:prefix": {
-                                        "Fn::Join": [
-                                            "",
-                                            [
-                                                { "Ref": "SummaryDestination" },
-                                                "/*"
-                                            ]
-                                        ]
-                                    }
-                                }
-                            }
+                            ]
                         }]
                     }
                 }]
@@ -117,6 +103,21 @@
                         "LambdaRole",
                         "Arn"
                     ]
+                },
+                "Environment": {
+                    "Variables": {
+                        "SummariesDestination": {
+                            "Fn::Join": [
+                                "",
+                                [
+                                    { "Ref": "MainBucket" },
+                                    "/osm-dash/",
+                                    { "Ref": "Environment" },
+                                    "/summaries/"
+                                ]
+                            ]
+                        }
+                    }
                 }
             }
         }
@@ -127,9 +128,24 @@
                 "Fn::Join": [
                     "",
                     [
-                        { "Ref": "SlugPrefix"},
+                        { "Ref": "MainBucket" },
+                        "/",
+                        { "Ref": "SlugPrefix" },
                         { "Ref": "GitSha" },
                         ".zip"
+                    ]
+                ]
+            }
+        },
+        "SummariesDestination": {
+            "Value": {
+                "Fn::Join": [
+                    "",
+                    [
+                        { "Ref": "MainBucket" },
+                        "/osm-dash/",
+                        { "Ref": "Environment" },
+                        "/"
                     ]
                 ]
             }
