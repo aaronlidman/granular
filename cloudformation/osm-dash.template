@@ -93,7 +93,17 @@
                         ]
                     }
                 },
-                "FunctionName": "OSMDashMinutely",
+                "FunctionName": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "osm-dash-minutely-",
+                            { "Ref": "GitSha" },
+                            "-",
+                            { "Ref": "Environment" }
+                        ]
+                    ]
+                },
                 "Handler": "index.handler",
                 "Runtime": "nodejs6.10",
                 "Timeout": 150,
