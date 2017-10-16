@@ -98,8 +98,6 @@
                         "",
                         [
                             "osm-dash-minutely-",
-                            { "Ref": "GitSha" },
-                            "-",
                             { "Ref": "Environment" }
                         ]
                     ]
