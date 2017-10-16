@@ -70,6 +70,13 @@
                                     ]
                                 }
                             ]
+                        }, {
+                            "Sid": "InvokePermission",
+                            "Effect": "Allow",
+                            "Action": [
+                                "lambda:InvokeFunction"
+                            ],
+                            "Resource": "*"
                         }]
                     }
                 }]
@@ -127,6 +134,21 @@
                         }
                     }
                 }
+            }
+        },
+        "MinutelyLambdaSchedulerRule": {
+            "Type": "AWS::Events::Rule",
+            "Properties": {
+                "ScheduleExpression": "rate(1 minute)",
+                "Targets": [{
+                    "Id": "MinutelyLambdaScheduler",
+                    "Arn": {
+                        "Fn::GetAtt": [
+                            "MinutelyLambda",
+                            "Arn"
+                        ]
+                    }
+                }]
             }
         }
     },
