@@ -13,10 +13,9 @@
             "Type": "String",
             "Default": "slugs/osm-dash/"
         },
-        "SummaryDestination": {
-            "Description": "S3 location to put the summary files",
+        "Environment": {
             "Type": "String",
-            "Default": "osm-dash/summaries/"
+            "Default": "staging"
         }
     },
     "Resources": {
@@ -38,53 +37,39 @@
                 "Policies": [{
                     "PolicyName": "osm-dash",
                     "PolicyDocument": {
-                        "Statement": [{
-                            "Action": [
-                                "cloudwatch:PutMetricData",
-                                "cloudwatch:GetMetricStatistics"
-                            ],
-                            "Effect": "Allow",
-                            "Resource": "*"
-                        },
-                        {
-                            "Effect": "Allow",
-                            "Action": [
-                                "logs:*"
-                            ],
-                            "Resource": "arn:aws:logs:*:*:*"
-                        },{
-                            "Effect": "Allow",
-                            "Action": [
-                                "s3:DeleteObject",
-                                "s3:GetObject",
-                                "s3:PutObject"
-                            ],
-                            "Resource": [
-                                {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "arn:aws:s3:::",
-                                            { "Ref": "MainBucket" },
-                                            "/*"
-                                        ]
-                                    ]
-                                }
-                            ],
-                            "Condition": {
-                                "StringLike": {
-                                    "s3:prefix": {
+                        "Statement": [
+                            {
+                                "Action": [
+                                    "cloudwatch:PutMetricData",
+                                    "cloudwatch:GetMetricStatistics"
+                                ],
+                                "Effect": "Allow",
+                                "Resource": "*"
+                            },{
+                                "Effect": "Allow",
+                                "Action": ["logs:*"],
+                                "Resource": "arn:aws:logs:*:*:*"
+                            },{
+                                "Effect": "Allow",
+                                "Action": [
+                                    "s3:DeleteObject",
+                                    "s3:GetObject",
+                                    "s3:PutObject"
+                                ],
+                                "Resource": [
+                                    {
                                         "Fn::Join": [
                                             "",
                                             [
-                                                { "Ref": "SummaryDestination" },
+                                                "arn:aws:s3:::",
+                                                { "Ref": "MainBucket" },
                                                 "/*"
                                             ]
                                         ]
                                     }
-                                }
+                                ]
                             }
-                        }]
+                        ]
                     }
                 }]
             }
@@ -107,7 +92,15 @@
                         ]
                     }
                 },
-                "FunctionName": "OSMDashMinutely",
+                "FunctionName": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "osm-dash-minutely-",
+                            { "Ref": "Environment" }
+                        ]
+                    ]
+                },
                 "Handler": "index.handler",
                 "Runtime": "nodejs6.10",
                 "Timeout": 150,
@@ -117,7 +110,60 @@
                         "LambdaRole",
                         "Arn"
                     ]
+                },
+                "Environment": {
+                    "Variables": {
+                        "SummariesDestination": {
+                            "Fn::Join": [
+                                "",
+                                [
+                                    "s3://",
+                                    { "Ref": "MainBucket" },
+                                    "/osm-dash/",
+                                    { "Ref": "Environment" },
+                                    "/summaries/"
+                                ]
+                            ]
+                        },
+                        "GitSha": {"Ref": "GitSha"},
+                        "Environment": {"Ref": "Environment"}
+                    }
                 }
+            }
+        },
+        "LambdaInvokePermissions": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+                "Action": "lambda:InvokeFunction",
+                "FunctionName": {
+                    "Fn::GetAtt": [
+                        "MinutelyLambda",
+                        "Arn"
+                    ]
+                },
+                "Principal": "events.amazonaws.com",
+                "SourceArn": {
+                    "Fn::GetAtt": [
+                        "MinutelyLambdaTrigger",
+                        "Arn"
+                    ]
+                }
+            }
+        },
+        "MinutelyLambdaTrigger": {
+            "Type": "AWS::Events::Rule",
+            "Properties": {
+                "ScheduleExpression": "rate(1 minute)",
+                "State": "ENABLED",
+                "Targets": [{
+                    "Id": "MinutelyLambda",
+                    "Arn": {
+                        "Fn::GetAtt": [
+                            "MinutelyLambda",
+                            "Arn"
+                        ]
+                    }
+                }]
             }
         }
     },
@@ -127,9 +173,25 @@
                 "Fn::Join": [
                     "",
                     [
-                        { "Ref": "SlugPrefix"},
+                        { "Ref": "MainBucket" },
+                        "/",
+                        { "Ref": "SlugPrefix" },
                         { "Ref": "GitSha" },
                         ".zip"
+                    ]
+                ]
+            }
+        },
+        "SummariesDestination": {
+            "Value": {
+                "Fn::Join": [
+                    "",
+                    [
+                        "s3://",
+                        { "Ref": "MainBucket" },
+                        "/osm-dash/",
+                        { "Ref": "Environment" },
+                        "/"
                     ]
                 ]
             }
