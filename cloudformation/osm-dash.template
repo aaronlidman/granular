@@ -37,47 +37,39 @@
                 "Policies": [{
                     "PolicyName": "osm-dash",
                     "PolicyDocument": {
-                        "Statement": [{
-                            "Action": [
-                                "cloudwatch:PutMetricData",
-                                "cloudwatch:GetMetricStatistics"
-                            ],
-                            "Effect": "Allow",
-                            "Resource": "*"
-                        },
-                        {
-                            "Effect": "Allow",
-                            "Action": [
-                                "logs:*"
-                            ],
-                            "Resource": "arn:aws:logs:*:*:*"
-                        },{
-                            "Effect": "Allow",
-                            "Action": [
-                                "s3:DeleteObject",
-                                "s3:GetObject",
-                                "s3:PutObject"
-                            ],
-                            "Resource": [
-                                {
-                                    "Fn::Join": [
-                                        "",
-                                        [
-                                            "arn:aws:s3:::",
-                                            { "Ref": "MainBucket" },
-                                            "/*"
+                        "Statement": [
+                            {
+                                "Action": [
+                                    "cloudwatch:PutMetricData",
+                                    "cloudwatch:GetMetricStatistics"
+                                ],
+                                "Effect": "Allow",
+                                "Resource": "*"
+                            },{
+                                "Effect": "Allow",
+                                "Action": ["logs:*"],
+                                "Resource": "arn:aws:logs:*:*:*"
+                            },{
+                                "Effect": "Allow",
+                                "Action": [
+                                    "s3:DeleteObject",
+                                    "s3:GetObject",
+                                    "s3:PutObject"
+                                ],
+                                "Resource": [
+                                    {
+                                        "Fn::Join": [
+                                            "",
+                                            [
+                                                "arn:aws:s3:::",
+                                                { "Ref": "MainBucket" },
+                                                "/*"
+                                            ]
                                         ]
-                                    ]
-                                }
-                            ]
-                        }, {
-                            "Sid": "InvokePermission",
-                            "Effect": "Allow",
-                            "Action": [
-                                "lambda:InvokeFunction"
-                            ],
-                            "Resource": "*"
-                        }]
+                                    }
+                                ]
+                            }
+                        ]
                     }
                 }]
             }
@@ -125,23 +117,46 @@
                             "Fn::Join": [
                                 "",
                                 [
+                                    "s3://",
                                     { "Ref": "MainBucket" },
                                     "/osm-dash/",
                                     { "Ref": "Environment" },
                                     "/summaries/"
                                 ]
                             ]
-                        }
+                        },
+                        "GitSha": {"Ref": "GitSha"},
+                        "Environment": {"Ref": "Environment"}
                     }
                 }
             }
         },
-        "MinutelyLambdaSchedulerRule": {
+        "LambdaInvokePermissions": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+                "Action": "lambda:InvokeFunction",
+                "FunctionName": {
+                    "Fn::GetAtt": [
+                        "MinutelyLambda",
+                        "Arn"
+                    ]
+                },
+                "Principal": "events.amazonaws.com",
+                "SourceArn": {
+                    "Fn::GetAtt": [
+                        "MinutelyLambdaTrigger",
+                        "Arn"
+                    ]
+                }
+            }
+        },
+        "MinutelyLambdaTrigger": {
             "Type": "AWS::Events::Rule",
             "Properties": {
                 "ScheduleExpression": "rate(1 minute)",
+                "State": "ENABLED",
                 "Targets": [{
-                    "Id": "MinutelyLambdaScheduler",
+                    "Id": "MinutelyLambda",
                     "Arn": {
                         "Fn::GetAtt": [
                             "MinutelyLambda",
@@ -172,6 +187,7 @@
                 "Fn::Join": [
                     "",
                     [
+                        "s3://",
                         { "Ref": "MainBucket" },
                         "/osm-dash/",
                         { "Ref": "Environment" },
