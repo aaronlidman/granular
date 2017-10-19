@@ -10,7 +10,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "tape test/*.js && tape test/*/*.js"
   },
   "author": "Aaron Lidman",
   "license": "ISC",
@@ -20,7 +20,9 @@
   },
   "devDependencies": {
     "eslint": "^4.8.0",
-    "eslint-config-mourner": "^2.0.3"
+    "eslint-config-mourner": "^2.0.3",
+    "nock": "^9.0.22",
+    "tape": "^4.8.0"
   },
   "eslintConfig": {
     "extends": "mourner",
