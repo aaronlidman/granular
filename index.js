@@ -6,13 +6,18 @@ const request = require('./lib/request.js');
 const cwput = require('./lib/cwput.js');
 
 module.exports.handler = function () {
-    console.log(process.env);
+    let time;
 
     request.get(config.base_url + config.replication_dir + 'state.txt')
         .then(parse.state)
-        .then(request.getStream)
+        .then((data) => {
+            time = data.state;
+            return new Promise(request.getGzipStream(data.changeUrl));
+        })
         .then(parse.change)
-        .then(cwput.overallMetrics)
+        .then((stats) => {
+            return new Promise(cwput.overallMetrics(stats, time));
+        })
         .then((stats) => {
             console.log('user,c_nodes,m_nodes,d_nodes,c_ways,m_ways,d_ways,c_relations,m_relations,d_relations');
             for (const user in stats) {
