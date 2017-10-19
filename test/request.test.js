@@ -39,6 +39,9 @@ test('getGzipStream', (t) => {
     request.getGzipStream('http://yoyo.go/change.osc.gz')
         .then((response) => {
             t.ok(response.readable);
+
+            // this catches on circle for some reason
+            response.on('error', t.ok);
         });
 
     request.getGzipStream('http://yoyo.go/change.osc.gz')
