@@ -7,6 +7,8 @@ const path = require('path');
 const test = require('tape');
 const parse = require('../lib/parse.js');
 
+process.env.ReplicationPath = 'http://planet.osm.org/replication/';
+
 test('parse state file', (t) => {
     const stateFile = path.join(__dirname, './fixtures/state1.txt');
     parse.state(fs.readFileSync(stateFile).toString())

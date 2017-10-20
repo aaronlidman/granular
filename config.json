@@ -1,6 +1,0 @@
-{
-    "bucket": "aaronlidman-west-2",
-    "prefix": "osm-dash/",
-    "base_url": "http://planet.osm.org/replication/",
-    "replication_dir": "minute/"
-}
