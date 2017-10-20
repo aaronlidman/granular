@@ -16,6 +16,7 @@ module.exports.handler = function () {
         })
         .then(parse.change)
         .then((stats) => {
+            time = stats['_minute'];
             return new Promise(cwput.overallMetrics(stats, time));
         })
         .then((stats) => {
