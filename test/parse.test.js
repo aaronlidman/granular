@@ -8,15 +8,15 @@ const test = require('tape');
 const parse = require('../lib/parse.js');
 
 test('parse state file', (t) => {
-    var stateFile = path.join(__dirname, './fixtures/state1.txt');
+    const stateFile = path.join(__dirname, './fixtures/state1.txt');
     parse.state(fs.readFileSync(stateFile).toString())
         .then((result) => {
             t.true(result.state, 'state property is present');
-            t.true(result.changeUrl, 'changeUrl property is present');
+            t.true(result.state.changeUrl, 'changeUrl property is present');
 
             t.equal(result.state.sequenceNumber, '002669949',
                 'sequenceNumber is as expected');
-            t.equal(result.changeUrl,
+            t.equal(result.state.changeUrl,
                 'http://planet.osm.org/replication/minute/002/669/949.osc.gz',
                 'changeUrl is as expected');
 
@@ -25,19 +25,23 @@ test('parse state file', (t) => {
 });
 
 test('parse change file', (t) => {
-    var changeFile = path.join(__dirname, './fixtures/change1.osc.gz');
-    var readStream = fs.createReadStream(changeFile);
+    const changeFile = path.join(__dirname, './fixtures/change1.osc.gz');
+    const readStream = fs.createReadStream(changeFile);
+    const obj = {
+        state: {},
+        changes: readStream.pipe(zlib.createGunzip())
+    };
 
-    parse.change(readStream.pipe(zlib.createGunzip()))
+    parse.changes(obj)
         .then((result) => {
-            t.true(result['_overall'], 'overall stats are present');
-            t.true(result.cb75, 'random user is present');
-            t.true(result['Chris McKay'], 'random user is present');
+            t.true(result.stats['_overall'], 'overall stats are present');
+            t.true(result.stats.cb75, 'random user is present');
+            t.true(result.stats['Chris McKay'], 'random user is present');
 
-            t.deepEqual(result.gloriaq, {cnode: 26, cway: 26}, 'counts as expected');
-            t.deepEqual(result.vivekanandapai, {mnode: 9, cnode: 228, mway: 12, cway: 41},
+            t.deepEqual(result.stats.gloriaq, {cnode: 26, cway: 26}, 'counts as expected');
+            t.deepEqual(result.stats.vivekanandapai, {mnode: 9, cnode: 228, mway: 12, cway: 41},
                 'counts as expected');
-            t.deepEqual(result['_overall'],
+            t.deepEqual(result.stats['_overall'],
                 {
                     mnode: 411, dnode: 187, cnode: 2340, mway: 169, dway: 7,
                     cway: 282, mrelation: 4, drelation: 8, crelation: 5
