@@ -12,12 +12,12 @@ module.exports.handler = function () {
         .then(parse.state)
         .then((data) => {
             time = data.state.timestamp;
-            return new Promise(request.getGzipStream(data.changeUrl));
+            return request.getGzipStream(data.changeUrl);
         })
         .then(parse.change)
         .then((stats) => {
             time = stats['_minute'];
-            return new Promise(cwput.overallMetrics(stats, time));
+            return cwput.overallMetrics(stats, time);
         })
         .then((stats) => {
             console.log('user,c_nodes,m_nodes,d_nodes,c_ways,m_ways,d_ways,c_relations,m_relations,d_relations');
