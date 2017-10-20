@@ -11,11 +11,12 @@ module.exports.handler = function () {
     request.get(config.base_url + config.replication_dir + 'state.txt')
         .then(parse.state)
         .then((data) => {
-            time = data.state;
+            time = data.state.timestamp;
             return new Promise(request.getGzipStream(data.changeUrl));
         })
         .then(parse.change)
         .then((stats) => {
+            time = stats['_minute'];
             return new Promise(cwput.overallMetrics(stats, time));
         })
         .then((stats) => {
