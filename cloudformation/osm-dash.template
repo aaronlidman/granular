@@ -5,7 +5,7 @@
         "GitSha": {
             "Type": "String"
         },
-        "MainBucket": {
+        "Bucket": {
             "Type": "String",
             "Default": ""
         },
@@ -13,9 +13,17 @@
             "Type": "String",
             "Default": "slugs/osm-dash/"
         },
+        "OutputPrefix": {
+            "Type": "String",
+            "Default": "osm-dash/"
+        },
         "Environment": {
             "Type": "String",
             "Default": "staging"
+        },
+        "ReplicationPath": {
+            "Type": "String",
+            "Default": "http://planet.osm.org/replication/"
         }
     },
     "Resources": {
@@ -52,9 +60,12 @@
                             },{
                                 "Effect": "Allow",
                                 "Action": [
+                                    "s3:HeadObject",
                                     "s3:DeleteObject",
                                     "s3:GetObject",
-                                    "s3:PutObject"
+                                    "s3:GetObjectAcl",
+                                    "s3:PutObject",
+                                    "s3:PutObjectAcl"
                                 ],
                                 "Resource": [
                                     {
@@ -62,8 +73,8 @@
                                             "",
                                             [
                                                 "arn:aws:s3:::",
-                                                { "Ref": "MainBucket" },
-                                                "/*"
+                                                { "Ref": "Bucket" },
+                                                "/osm-dash/*"
                                             ]
                                         ]
                                     }
@@ -79,7 +90,7 @@
             "Properties": {
                 "Code": {
                     "S3Bucket": {
-                        "Ref": "MainBucket"
+                        "Ref": "Bucket"
                     },
                     "S3Key": {
                         "Fn::Join": [
@@ -113,20 +124,11 @@
                 },
                 "Environment": {
                     "Variables": {
-                        "SummariesDestination": {
-                            "Fn::Join": [
-                                "",
-                                [
-                                    "s3://",
-                                    { "Ref": "MainBucket" },
-                                    "/osm-dash/",
-                                    { "Ref": "Environment" },
-                                    "/summaries/"
-                                ]
-                            ]
-                        },
+                        "Bucket": {"Ref": "Bucket"},
                         "GitSha": {"Ref": "GitSha"},
-                        "Environment": {"Ref": "Environment"}
+                        "Environment": {"Ref": "Environment"},
+                        "OutputPrefix": {"Ref": "OutputPrefix"},
+                        "ReplicationPath": {"Ref": "ReplicationPath"}
                     }
                 }
             }
@@ -173,7 +175,7 @@
                 "Fn::Join": [
                     "",
                     [
-                        { "Ref": "MainBucket" },
+                        { "Ref": "Bucket" },
                         "/",
                         { "Ref": "SlugPrefix" },
                         { "Ref": "GitSha" },
@@ -188,7 +190,7 @@
                     "",
                     [
                         "s3://",
-                        { "Ref": "MainBucket" },
+                        { "Ref": "Bucket" },
                         "/osm-dash/",
                         { "Ref": "Environment" },
                         "/"
