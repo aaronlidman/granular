@@ -23,7 +23,7 @@ test('overallFile', (t) => {
 
     write.overallFile({
         stats: {'test': {cnode: 22, mnode: 17}},
-        time: '2017-10-13T15:20'
+        time: '2017-10-13T15:20:00Z'
     })
         .then(t.ok)
         .catch(t.error);

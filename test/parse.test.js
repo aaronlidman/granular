@@ -49,7 +49,7 @@ test('parse change file', (t) => {
                     cway: 282, mrelation: 4, drelation: 8, crelation: 5
                 },
                 'counts as expected');
-            t.equal(result.time, '2017-10-13T15:20', 'timestamp is as expected');
+            t.equal(result.time, '2017-10-13T15:20:00Z', 'timestamp is as expected');
             t.end();
         }).catch(t.error);
 });
