@@ -8,11 +8,9 @@ const write = require('../lib/write.js');
 
 test('overallFile', (t) => {
     AWS.mock('S3', 'putObject', function (params, callback) {
-        t.ok(params);
-
         var testUser = zlib.gunzipSync(params.Body).toString().split('\n')[1];
         t.equal(testUser, 'test,22,17,0,0,0,0,0,0,0');
-
+        t.equal(params.Key, 'yes/warm/minutes/2017-10-13T15:20.csv.gz');
         callback(null, 'successfully putObject');
     });
 
@@ -23,9 +21,18 @@ test('overallFile', (t) => {
     process.env.Bucket = 'shovel';
     process.env.OutputPrefix = 'yes/';
 
-    write.overallFile({stats: {'test': {cnode: 22, mnode: 17}}})
+    write.overallFile({
+        stats: {'test': {cnode: 22, mnode: 17}},
+        time: '2017-10-13T15:20'
+    })
         .then(t.ok)
         .catch(t.error);
+
+    write.overallFile({
+        stats: {'test': {cnode: 22, mnode: 17}}
+    }).catch((error) => {
+        t.equal(error, 'missing timestamp');
+    });
 
     AWS.restore();
 
