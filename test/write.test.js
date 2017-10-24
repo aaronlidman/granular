@@ -10,29 +10,44 @@ test('overallFile', (t) => {
     AWS.mock('S3', 'putObject', function (params, callback) {
         var testUser = zlib.gunzipSync(params.Body).toString().split('\n')[1];
         t.equal(testUser, 'test,22,17,0,0,0,0,0,0,0');
-        t.equal(params.Key, 'yes/warm/minutes/2017-10-13T15:20.csv.gz');
+        if (params.Key === (
+            'stack/environment/raw-stats/2017-10-13T15:20-002669949.csv.gz' ||
+            'stack/environment/raw-stats/2017-10-13T15:19-002669949.csv.gz')) {
+            t.ok(params.Key);
+        }
         callback(null, 'successfully putObject');
     });
 
     process.env.AWS_ACCESS_KEY_ID = null;
     process.env.AWS_SECRET_ACCESS_KEY = null;
 
-    process.env.Environment = 'warm';
-    process.env.Bucket = 'shovel';
-    process.env.OutputPrefix = 'yes/';
+    process.env.Bucket = 'bucket';
+    process.env.Environment = 'environment';
+    process.env.OutputPrefix = 'stack/';
 
+    // plain old write
     write.overallFile({
-        stats: {'test': {cnode: 22, mnode: 17}},
-        time: '2017-10-13T15:20:00Z'
-    })
-        .then(t.ok)
-        .catch(t.error);
+        stats: {'2017-10-13T15:20:00Z': {'test': {cnode: 22, mnode: 17}}},
+        state: {sequenceNumber: '002669949'}
+    }).then(t.ok).catch(t.error);
 
+    // catch missing sequence
     write.overallFile({
-        stats: {'test': {cnode: 22, mnode: 17}}
-    }).catch((error) => {
-        t.equal(error, 'missing timestamp');
+        stats: {'2017-10-13T15:20:00Z': {'test': {cnode: 22, mnode: 17}}},
+    }).catch((err) => {
+        t.equal(err, 'missing sequenceNumber');
     });
+
+    // write multiple files
+    write.overallFile({
+        stats: {
+            '2017-10-13T15:20:00Z': {'test': {cnode: 22, mnode: 17}},
+            '2017-10-13T15:19:00Z': {'test': {cnode: 22, mnode: 17}}
+        },
+        state: {sequenceNumber: '002669949'}
+    }).then((data) => {
+        t.deepEqual(data, ['successfully putObject', 'successfully putObject']);
+    }).catch(t.error);
 
     AWS.restore();
 
