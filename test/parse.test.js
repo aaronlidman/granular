@@ -29,10 +29,7 @@ test('parse state file', (t) => {
 test('parse change file', (t) => {
     const changeFile = path.join(__dirname, './fixtures/change1.osc.gz');
     const readStream = fs.createReadStream(changeFile);
-    const obj = {
-        state: {},
-        changes: readStream.pipe(zlib.createGunzip())
-    };
+    const obj = {changes: readStream.pipe(zlib.createGunzip())};
 
     parse.changes(obj)
         .then((result) => {
@@ -50,6 +47,7 @@ test('parse change file', (t) => {
                 },
                 'counts as expected');
             t.deepEqual(Object.keys(result.stats), ['2017-10-13T15:20:00Z', '2017-10-13T15:21:00Z'], 'timestamps are as expected');
+            t.equal(result.state, undefined, 'state is not present');
             t.end();
         }).catch(t.error);
 });
