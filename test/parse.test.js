@@ -36,20 +36,20 @@ test('parse change file', (t) => {
 
     parse.changes(obj)
         .then((result) => {
-            t.true(result.stats['_overall'], 'overall stats are present');
-            t.true(result.stats.cb75, 'random user is present');
-            t.true(result.stats['Chris McKay'], 'random user is present');
+            t.true(result.stats['2017-10-13T15:20:00Z']['_overall'], 'overall stats are present');
+            t.true(result.stats['2017-10-13T15:21:00Z'].mavl, 'random user is present');
+            t.true(result.stats['2017-10-13T15:20:00Z']['Chris McKay'], 'random user is present');
 
-            t.deepEqual(result.stats.gloriaq, {cnode: 26, cway: 26}, 'counts as expected');
-            t.deepEqual(result.stats.vivekanandapai, {mnode: 9, cnode: 228, mway: 12, cway: 41},
+            t.deepEqual(result.stats['2017-10-13T15:20:00Z'].gloriaq, {cnode: 26, cway: 26}, 'counts as expected');
+            t.deepEqual(result.stats['2017-10-13T15:20:00Z'].vivekanandapai, {mnode: 9, cnode: 228, mway: 12, cway: 41},
                 'counts as expected');
-            t.deepEqual(result.stats['_overall'],
+            t.deepEqual(result.stats['2017-10-13T15:20:00Z']['_overall'],
                 {
-                    mnode: 411, dnode: 187, cnode: 2340, mway: 169, dway: 7,
+                    mnode: 410, dnode: 187, cnode: 2335, mway: 169, dway: 7,
                     cway: 282, mrelation: 4, drelation: 8, crelation: 5
                 },
                 'counts as expected');
-            t.equal(result.time, '2017-10-13T15:20:00Z', 'timestamp is as expected');
+            t.deepEqual(Object.keys(result.stats), ['2017-10-13T15:20:00Z', '2017-10-13T15:21:00Z'], 'timestamps are as expected');
             t.end();
         }).catch(t.error);
 });
