@@ -3,9 +3,12 @@
 
 const fs = require('fs');
 const zlib = require('zlib');
+const path = require('path');
 const parse = require('../lib/parse.js');
 
-const fd = fs.createReadStream('/Users/alidman/granular/' + process.argv[2])
+const fd = fs.createReadStream(path.join(process.cwd(), process.argv[2]))
     .pipe(zlib.createGunzip());
 
-parse.change(fd);
+parse.changes({
+    changes: fd
+}).then(console.log);
