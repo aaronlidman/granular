@@ -11,7 +11,7 @@ module.exports.handler = function () {
         .then(request.changes)
         .then(parse.changes)
         .then(cwput.overallMetrics)
-        .then(write.overallFile)
+        .then(write.minutelyStats)
         .then((data) => console.log(data))
         .catch((err) => console.log(err));
 };

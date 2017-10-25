@@ -38,7 +38,7 @@ test('getGzipStream', (t) => {
 
     request.getGzipStream('http://yoyo.go/change.osc.gz')
         .then((response) => {
-            t.ok(response.readable);
+            t.ok(response.readable, 'got a readableStream as expected');
 
             // this catches on circle for some reason
             response.on('error', t.ok);
@@ -49,7 +49,7 @@ test('getGzipStream', (t) => {
             t.error('should not respond');
         })
         .catch((err) => {
-            t.equal(err.status, 404);
+            t.equal(err.status, 404, 'catches error correctly');
         });
 
     t.end();

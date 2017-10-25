@@ -6,35 +6,66 @@ const zlib = require('zlib');
 
 const write = require('../lib/write.js');
 
-test('overallFile', (t) => {
+test('minutelyStats', (t) => {
     AWS.mock('S3', 'putObject', function (params, callback) {
         var testUser = zlib.gunzipSync(params.Body).toString().split('\n')[1];
-        t.equal(testUser, 'test,22,17,0,0,0,0,0,0,0');
-        t.equal(params.Key, 'yes/warm/minutes/2017-10-13T15:20.csv.gz');
-        callback(null, 'successfully putObject');
+        t.equal(testUser, 'test,22,17,0,0,0,0,0,0,0', 'file contents as expected');
+        if (params.Key === (
+            'stack/environment/raw-stats/2017-10-13T15:20-002669949.csv.gz' ||
+            'stack/environment/raw-stats/2017-10-13T15:19-002669949.csv.gz')) {
+            t.ok(params.Key, 'files written to the right place');
+        }
+        callback(null, params.Key);
+    });
+
+    AWS.mock('CloudWatch', 'putMetricData', function (params, callback) {
+        t.equal(params.MetricData[0].MetricName, 'files_written', 'files_written metric put');
+        callback(null, true);
     });
 
     process.env.AWS_ACCESS_KEY_ID = null;
     process.env.AWS_SECRET_ACCESS_KEY = null;
 
-    process.env.Environment = 'warm';
-    process.env.Bucket = 'shovel';
-    process.env.OutputPrefix = 'yes/';
+    process.env.Bucket = 'bucket';
+    process.env.Environment = 'environment';
+    process.env.OutputPrefix = 'stack/';
 
-    write.overallFile({
-        stats: {'test': {cnode: 22, mnode: 17}},
-        time: '2017-10-13T15:20:00Z'
-    })
-        .then(t.ok)
-        .catch(t.error);
+    let promises = [];
 
-    write.overallFile({
-        stats: {'test': {cnode: 22, mnode: 17}}
-    }).catch((error) => {
-        t.equal(error, 'missing timestamp');
-    });
+    // plain old write
+    promises.push(write.minutelyStats({
+        stats: {'2017-10-13T15:20:00Z': {'test': {cnode: 22, mnode: 17}}},
+        state: {sequenceNumber: '002669949'}
+    }).then(t.ok).catch(t.error));
 
-    AWS.restore();
+    // catch missing sequence
+    promises.push(write.minutelyStats({
+        stats: {'2017-10-13T15:20:00Z': {'test': {cnode: 22, mnode: 17}}},
+    }).catch((err) => {
+        t.equal(err, 'missing sequenceNumber', 'successfully errors on missing sequenceNumber');
+    }));
 
-    t.end();
+    // write multiple files
+    promises.push(write.minutelyStats({
+        stats: {
+            '2017-10-13T15:20:00Z': {'test': {cnode: 22, mnode: 17}},
+            '2017-10-13T15:19:00Z': {'test': {cnode: 22, mnode: 17}}
+        },
+        state: {sequenceNumber: '002669949'}
+    }).then((data) => {
+        t.deepEqual(data,
+            [
+                'stack/environment/raw-stats/2017-10-13T15:20-002669949.csv.gz',
+                'stack/environment/raw-stats/2017-10-13T15:19-002669949.csv.gz'
+            ],
+            'successfully wrote multiple files');
+    }).catch(t.error));
+
+    Promise.all(promises)
+        .then(AWS.restore)
+        .then(t.end)
+        .catch((error) => {
+            t.error(error);
+            t.end();
+        });
 });
