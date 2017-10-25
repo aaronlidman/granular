@@ -6,7 +6,7 @@ const zlib = require('zlib');
 
 const write = require('../lib/write.js');
 
-test('overallFile', (t) => {
+test('minutelyStats', (t) => {
     AWS.mock('S3', 'putObject', function (params, callback) {
         var testUser = zlib.gunzipSync(params.Body).toString().split('\n')[1];
         t.equal(testUser, 'test,22,17,0,0,0,0,0,0,0');
@@ -26,20 +26,20 @@ test('overallFile', (t) => {
     process.env.OutputPrefix = 'stack/';
 
     // plain old write
-    write.overallFile({
+    write.minutelyStats({
         stats: {'2017-10-13T15:20:00Z': {'test': {cnode: 22, mnode: 17}}},
         state: {sequenceNumber: '002669949'}
     }).then(t.ok).catch(t.error);
 
     // catch missing sequence
-    write.overallFile({
+    write.minutelyStats({
         stats: {'2017-10-13T15:20:00Z': {'test': {cnode: 22, mnode: 17}}},
     }).catch((err) => {
         t.equal(err, 'missing sequenceNumber');
     });
 
     // write multiple files
-    write.overallFile({
+    write.minutelyStats({
         stats: {
             '2017-10-13T15:20:00Z': {'test': {cnode: 22, mnode: 17}},
             '2017-10-13T15:19:00Z': {'test': {cnode: 22, mnode: 17}}
