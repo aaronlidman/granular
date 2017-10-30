@@ -8,13 +8,17 @@ const write = require('../lib/write.js');
 
 test('minutelyStats', (t) => {
     AWS.mock('S3', 'putObject', function (params, callback) {
-        var testUser = zlib.gunzipSync(params.Body).toString().split('\n')[1];
-        t.equal(testUser, 'test,22,17,0,0,0,0,0,0,0', 'file contents as expected');
+        var fileObj = JSON.parse(zlib.gunzipSync(params.Body));
+        t.deepEqual(fileObj, {test: {cnode: 22, mnode: 17}}, 'file contents as expected');
+
         if (params.Key === (
-            'stack/environment/raw-stats/2017-10-13T15:20-002669949.csv.gz' ||
-            'stack/environment/raw-stats/2017-10-13T15:19-002669949.csv.gz')) {
+            'stack/environment/raw-stats/2017-10-13T15:20-002669949.json.gz' ||
+            'stack/environment/raw-stats/2017-10-13T15:19-002669949.json.gz')) {
             t.ok(params.Key, 'files written to the right place');
+        } else {
+            t.error();
         }
+
         callback(null, params.Key);
     });
 
@@ -55,8 +59,8 @@ test('minutelyStats', (t) => {
     }).then((data) => {
         t.deepEqual(data,
             [
-                'stack/environment/raw-stats/2017-10-13T15:20-002669949.csv.gz',
-                'stack/environment/raw-stats/2017-10-13T15:19-002669949.csv.gz'
+                'stack/environment/raw-stats/minutes/2017-10-13T15:20-002669949.json.gz',
+                'stack/environment/raw-stats/minutes/2017-10-13T15:19-002669949.json.gz'
             ],
             'successfully wrote multiple files');
     }).catch(t.error));
