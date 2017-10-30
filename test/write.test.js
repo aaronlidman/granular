@@ -9,7 +9,7 @@ const write = require('../lib/write.js');
 test('minutelyStats', (t) => {
     AWS.mock('S3', 'putObject', function (params, callback) {
         var fileObj = JSON.parse(zlib.gunzipSync(params.Body));
-        t.deepEqual(fileObj, {test: {cnode: 22, mnode: 17}}, 'file contents as expected');
+        t.deepEqual(fileObj, {test: {c_node: 22, m_node: 17}}, 'file contents as expected');
 
         if (params.Key === (
             'stack/environment/raw-stats/2017-10-13T15:20-002669949.json.gz' ||
@@ -38,13 +38,13 @@ test('minutelyStats', (t) => {
 
     // plain old write
     promises.push(write.minutelyStats({
-        stats: {'2017-10-13T15:20:00Z': {'test': {cnode: 22, mnode: 17}}},
+        stats: {'2017-10-13T15:20:00Z': {'test': {c_node: 22, m_node: 17}}},
         state: {sequenceNumber: '002669949'}
     }).then(t.ok).catch(t.error));
 
     // catch missing sequence
     promises.push(write.minutelyStats({
-        stats: {'2017-10-13T15:20:00Z': {'test': {cnode: 22, mnode: 17}}},
+        stats: {'2017-10-13T15:20:00Z': {'test': {c_node: 22, m_node: 17}}},
     }).catch((err) => {
         t.equal(err, 'missing sequenceNumber', 'successfully errors on missing sequenceNumber');
     }));
@@ -52,8 +52,8 @@ test('minutelyStats', (t) => {
     // write multiple files
     promises.push(write.minutelyStats({
         stats: {
-            '2017-10-13T15:20:00Z': {'test': {cnode: 22, mnode: 17}},
-            '2017-10-13T15:19:00Z': {'test': {cnode: 22, mnode: 17}}
+            '2017-10-13T15:20:00Z': {'test': {c_node: 22, m_node: 17}},
+            '2017-10-13T15:19:00Z': {'test': {c_node: 22, m_node: 17}}
         },
         state: {sequenceNumber: '002669949'}
     }).then((data) => {

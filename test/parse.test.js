@@ -37,13 +37,13 @@ test('parse change file', (t) => {
             t.true(result.stats['2017-10-13T15:21:00Z'].mavl, 'random user is present');
             t.true(result.stats['2017-10-13T15:20:00Z']['Chris McKay'], 'random user is present');
 
-            t.deepEqual(result.stats['2017-10-13T15:20:00Z'].gloriaq, {cnode: 26, cway: 26}, 'counts as expected');
-            t.deepEqual(result.stats['2017-10-13T15:20:00Z'].vivekanandapai, {mnode: 9, cnode: 228, mway: 12, cway: 41},
+            t.deepEqual(result.stats['2017-10-13T15:20:00Z'].gloriaq, {c_node: 26, c_way: 26}, 'counts as expected');
+            t.deepEqual(result.stats['2017-10-13T15:20:00Z'].vivekanandapai, {m_node: 9, c_node: 228, m_way: 12, c_way: 41},
                 'counts as expected');
             t.deepEqual(result.stats['2017-10-13T15:20:00Z']['_overall'],
                 {
-                    mnode: 410, dnode: 187, cnode: 2335, mway: 169, dway: 7,
-                    cway: 282, mrelation: 4, drelation: 8, crelation: 5
+                    m_node: 410, d_node: 187, c_node: 2335, m_way: 169, d_way: 7,
+                    c_way: 282, m_relation: 4, d_relation: 8, c_relation: 5
                 },
                 'counts as expected');
             t.deepEqual(Object.keys(result.stats), ['2017-10-13T15:20:00Z', '2017-10-13T15:21:00Z'], 'timestamps are as expected');
