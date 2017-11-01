@@ -9,7 +9,7 @@ const write = require('../lib/write.js');
 test('minutelyStats', (t) => {
     AWS.mock('S3', 'putObject', function (params, callback) {
         let time = params.Key.split('/').slice(-1)[0].slice(0, 16) + ':00Z';
-        let testUser = zlib.gunzipSync(params.Body).toString().split('\n')[1];
+        let testUser = zlib.gunzipSync(params.Body).toString().split('\n')[0];
         t.equal(testUser, time + ',test,22,17,0,0,0,0,0,0,0', 'file contents as expected');
 
         if (params.Key === (
