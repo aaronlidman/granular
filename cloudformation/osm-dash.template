@@ -128,7 +128,8 @@
                         "GitSha": {"Ref": "GitSha"},
                         "Environment": {"Ref": "Environment"},
                         "OutputPrefix": {"Ref": "OutputPrefix"},
-                        "ReplicationPath": {"Ref": "ReplicationPath"}
+                        "ReplicationPath": {"Ref": "ReplicationPath"},
+                        "RollupQueue": {"Ref": "RollupQueue"}
                     }
                 }
             }
@@ -167,6 +168,9 @@
                     }
                 }]
             }
+        },
+        "RollupQueue": {
+          "Type" : "AWS::SQS::Queue"
         }
     },
     "Outputs": {
