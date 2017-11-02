@@ -7,7 +7,7 @@ const zlib = require('zlib');
 const write = require('../lib/write.js');
 
 test('minutelyStats', (t) => {
-    AWS.mock('S3', 'putObject', function (params, callback) {
+    AWS.mock('S3', 'putObject', (params, callback) => {
         let time = params.Key.split('/').slice(-1)[0].slice(0, 16) + ':00Z';
         let testUser = zlib.gunzipSync(params.Body).toString().split('\n')[0];
         t.equal(testUser, time + ',test,22,17,,,,,,,', 'file contents as expected');
@@ -23,7 +23,7 @@ test('minutelyStats', (t) => {
         callback(null, params.Key);
     });
 
-    AWS.mock('CloudWatch', 'putMetricData', function (params, callback) {
+    AWS.mock('CloudWatch', 'putMetricData', (params, callback) => {
         t.equal(params.MetricData[0].MetricName, 'files_written', 'files_written metric put');
         callback(null, true);
     });
