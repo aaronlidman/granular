@@ -10,7 +10,7 @@ test('minutelyStats', (t) => {
     AWS.mock('S3', 'putObject', function (params, callback) {
         let time = params.Key.split('/').slice(-1)[0].slice(0, 16) + ':00Z';
         let testUser = zlib.gunzipSync(params.Body).toString().split('\n')[0];
-        t.equal(testUser, time + ',test,22,17,0,0,0,0,0,0,0', 'file contents as expected');
+        t.equal(testUser, time + ',test,22,17,,,,,,,', 'file contents as expected');
 
         if (params.Key === (
             'stack/environment/raw-stats/2017-10-13T15:20-002669949.csv.gz' ||
