@@ -58,11 +58,7 @@ test('minutelyStats', (t) => {
         },
         state: {sequenceNumber: '002669949'}
     }).then((data) => {
-        t.deepEqual(data,
-            [
-                'stack/environment/raw-stats/minutes/2017-10-13T15:20-002669949.csv.gz',
-                'stack/environment/raw-stats/minutes/2017-10-13T15:19-002669949.csv.gz'
-            ],
+        t.deepEqual(data,  [{type: 'hour', datetime: '2017-10-13T15'}, {type: 'day', datetime: '2017-10-13'}],
             'successfully wrote multiple files');
     }).catch(t.error));
 
