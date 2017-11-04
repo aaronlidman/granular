@@ -67,7 +67,9 @@ test('minutelyStats', (t) => {
     }).catch(t.error));
 
     Promise.all(promises)
-        .then(AWS.restore)
+        .then(() => {
+            AWS.restore();
+        })
         .then(t.end)
         .catch((error) => {
             t.error(error);

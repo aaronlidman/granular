@@ -33,21 +33,24 @@ test('parse change file', (t) => {
 
     parse.changes(obj)
         .then((result) => {
-            t.true(result.stats['2017-10-13T15:20:00Z']['_overall'], 'overall stats are present');
-            t.true(result.stats['2017-10-13T15:21:00Z'].mavl, 'random user is present');
-            t.true(result.stats['2017-10-13T15:20:00Z']['Chris McKay'], 'random user is present');
+            t.deepEqual(Object.keys(result.stats), ['2017-10-13T15:20', '2017-10-13T15:21'], 'timestamps are as expected');
+            t.true(result.stats['2017-10-13T15:20']['_overall'], 'overall stats are present');
+            t.true(result.stats['2017-10-13T15:21'].mavl, 'random user is present');
+            t.true(result.stats['2017-10-13T15:20']['Chris McKay'], 'random user is present');
 
-            t.deepEqual(result.stats['2017-10-13T15:20:00Z'].gloriaq, {c_node: 26, c_way: 26}, 'counts as expected');
-            t.deepEqual(result.stats['2017-10-13T15:20:00Z'].vivekanandapai, {m_node: 9, c_node: 228, m_way: 12, c_way: 41},
+            t.deepEqual(result.stats['2017-10-13T15:20'].gloriaq, {c_node: 26, c_way: 26}, 'counts as expected');
+            t.deepEqual(result.stats['2017-10-13T15:20'].vivekanandapai, {m_node: 9, c_node: 228, m_way: 12, c_way: 41},
                 'counts as expected');
-            t.deepEqual(result.stats['2017-10-13T15:20:00Z']['_overall'],
+            t.deepEqual(result.stats['2017-10-13T15:20']['_overall'],
                 {
                     m_node: 410, d_node: 187, c_node: 2335, m_way: 169, d_way: 7,
                     c_way: 282, m_relation: 4, d_relation: 8, c_relation: 5
                 },
                 'counts as expected');
-            t.deepEqual(Object.keys(result.stats), ['2017-10-13T15:20:00Z', '2017-10-13T15:21:00Z'], 'timestamps are as expected');
             t.equal(result.state, undefined, 'state is not present');
             t.end();
-        }).catch(t.error);
+        }).catch((err) => {
+            t.error(err);
+            t.end();
+        });
 });
