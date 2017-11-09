@@ -85,7 +85,7 @@
                 }]
             }
         },
-        "MinutelyLambda": {
+        "ReplicationFetcherLambda": {
             "Type": "AWS::Lambda::Function",
             "Properties": {
                 "Code": {
@@ -107,7 +107,7 @@
                     "Fn::Join": [
                         "",
                         [
-                            "osm-dash-minutely-",
+                            "osm-dash-replication-fetcher-",
                             { "Ref": "Environment" }
                         ]
                     ]
@@ -128,45 +128,96 @@
                         "GitSha": {"Ref": "GitSha"},
                         "Environment": {"Ref": "Environment"},
                         "OutputPrefix": {"Ref": "OutputPrefix"},
-                        "ReplicationPath": {"Ref": "ReplicationPath"}
+                        "ReplicationPath": {"Ref": "ReplicationPath"},
+                        "RollupQueue": {"Ref": "RollupQueue"}
                     }
                 }
             }
         },
-        "LambdaInvokePermissions": {
+        "RollupLambda": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "S3Bucket": {
+                        "Ref": "Bucket"
+                    },
+                    "S3Key": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                { "Ref": "SlugPrefix"},
+                                { "Ref": "GitSha" },
+                                ".zip"
+                            ]
+                        ]
+                    }
+                },
+                "FunctionName": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "osm-dash-rollup-",
+                            { "Ref": "Environment" }
+                        ]
+                    ]
+                },
+                "Handler": "rollup.handler",
+                "Runtime": "nodejs6.10",
+                "Timeout": 300,
+                "MemorySize": 128,
+                "Role": {
+                    "Fn::GetAtt": [
+                        "LambdaRole",
+                        "Arn"
+                    ]
+                },
+                "Environment": {
+                    "Variables": {
+                        "Bucket": {"Ref": "Bucket"},
+                        "Environment": {"Ref": "Environment"},
+                        "OutputPrefix": {"Ref": "OutputPrefix"},
+                        "RollupQueue": {"Ref": "RollupQueue"}
+                    }
+                }
+            }
+        },
+        "ReplicationFetcherInvokePermissions": {
             "Type": "AWS::Lambda::Permission",
             "Properties": {
                 "Action": "lambda:InvokeFunction",
                 "FunctionName": {
                     "Fn::GetAtt": [
-                        "MinutelyLambda",
+                        "ReplicationFetcherLambda",
                         "Arn"
                     ]
                 },
                 "Principal": "events.amazonaws.com",
                 "SourceArn": {
                     "Fn::GetAtt": [
-                        "MinutelyLambdaTrigger",
+                        "ReplicationFetcherLambdaTrigger",
                         "Arn"
                     ]
                 }
             }
         },
-        "MinutelyLambdaTrigger": {
+        "ReplicationFetcherLambdaTrigger": {
             "Type": "AWS::Events::Rule",
             "Properties": {
                 "ScheduleExpression": "rate(1 minute)",
                 "State": "ENABLED",
                 "Targets": [{
-                    "Id": "MinutelyLambda",
+                    "Id": "ReplicationFetcherLambda",
                     "Arn": {
                         "Fn::GetAtt": [
-                            "MinutelyLambda",
+                            "ReplicationFetcherLambda",
                             "Arn"
                         ]
                     }
                 }]
             }
+        },
+        "RollupQueue": {
+          "Type" : "AWS::SQS::Queue"
         }
     },
     "Outputs": {
