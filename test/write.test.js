@@ -21,16 +21,11 @@ test('minutelyStats', (t) => {
         callback(null, {});
     });
 
-    AWS.mock('CloudWatch', 'putMetricData', function (params, callback) {
-        t.equal(params.MetricData[0].MetricName, 'files_written', 'files_written metric put');
-        callback(null, true);
-    });
-
     process.env.AWS_ACCESS_KEY_ID = null;
     process.env.AWS_SECRET_ACCESS_KEY = null;
 
     process.env.Bucket = 'bucket';
-    process.env.Environment = 'staging';
+    process.env.Environment = 'environment';
     process.env.OutputPrefix = 'stack/';
 
     let promises = [];
