@@ -48,6 +48,17 @@
                         "Statement": [
                             {
                                 "Action": [
+                                    "dynamodb:*"
+                                ],
+                                "Effect": "Allow",
+                                "Resource": {
+                                    "Fn::GetAtt": [
+                                        "MinutesTable",
+                                        "Arn"
+                                    ]
+                                }
+                            },{
+                                "Action": [
                                     "cloudwatch:PutMetricData",
                                     "cloudwatch:GetMetricStatistics"
                                 ],
@@ -166,6 +177,36 @@
                         ]
                     }
                 }]
+            }
+        },
+        "MinutesTable": {
+            "Type" : "AWS::DynamoDB::Table",
+            "Properties": {
+                "AttributeDefinitions": [{
+                    "AttributeName" : "minute",
+                    "AttributeType" : "S"
+                }],
+                "KeySchema": [{
+                    "AttributeName": "minute",
+                    "KeyType": "HASH"
+                }],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": 5,
+                    "WriteCapacityUnits": 2
+                },
+                "StreamSpecification": {
+                    "StreamViewType": "KEYS_ONLY"
+                },
+                "TableName": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "osm-dash-",
+                            { "Ref": "Environment" },
+                            "-minutes"
+                        ]
+                    ]
+                }
             }
         }
     },
