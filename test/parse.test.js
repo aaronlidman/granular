@@ -33,20 +33,20 @@ test('parse change file', (t) => {
 
     parse.changes(obj)
         .then((result) => {
-            t.true(result.stats['2017-10-13T15:20:00Z']['_overall'], 'overall stats are present');
-            t.true(result.stats['2017-10-13T15:21:00Z'].mavl, 'random user is present');
-            t.true(result.stats['2017-10-13T15:20:00Z']['Chris McKay'], 'random user is present');
+            t.true(result.stats['2017-10-13T15:20']['_overall'], 'overall stats are present');
+            t.true(result.stats['2017-10-13T15:21'].mavl, 'random user is present');
+            t.true(result.stats['2017-10-13T15:20']['Chris McKay'], 'random user is present');
 
-            t.deepEqual(result.stats['2017-10-13T15:20:00Z'].gloriaq, {cnode: 26, cway: 26}, 'counts as expected');
-            t.deepEqual(result.stats['2017-10-13T15:20:00Z'].vivekanandapai, {mnode: 9, cnode: 228, mway: 12, cway: 41},
+            t.deepEqual(result.stats['2017-10-13T15:20'].gloriaq, {create_node: 26, create_way: 26}, 'counts as expected');
+            t.deepEqual(result.stats['2017-10-13T15:20'].vivekanandapai, {modify_node: 9, create_node: 228, modify_way: 12, create_way: 41},
                 'counts as expected');
-            t.deepEqual(result.stats['2017-10-13T15:20:00Z']['_overall'],
+            t.deepEqual(result.stats['2017-10-13T15:20']['_overall'],
                 {
-                    mnode: 410, dnode: 187, cnode: 2335, mway: 169, dway: 7,
-                    cway: 282, mrelation: 4, drelation: 8, crelation: 5
+                    modify_node: 410, delete_node: 187, create_node: 2335, modify_way: 169, delete_way: 7,
+                    create_way: 282, modify_relation: 4, delete_relation: 8, create_relation: 5
                 },
                 'counts as expected');
-            t.deepEqual(Object.keys(result.stats), ['2017-10-13T15:20:00Z', '2017-10-13T15:21:00Z'], 'timestamps are as expected');
+            t.deepEqual(Object.keys(result.stats), ['2017-10-13T15:20', '2017-10-13T15:21'], 'timestamps are as expected');
             t.equal(result.state, undefined, 'state is not present');
             t.end();
         }).catch(t.error);
