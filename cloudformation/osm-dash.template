@@ -139,7 +139,7 @@
                         "GitSha": {"Ref": "GitSha"},
                         "Environment": {"Ref": "Environment"},
                         "OutputPrefix": {"Ref": "OutputPrefix"},
-                        "ReplicationPath": {"Ref": "ReplicationPath"}
+                        "ReplicationPath": {"Ref": "ReplicationPath"},
                         "MinutesTableStreamArn": {
                             "Fn::GetAtt": [
                                 "MinutesTable",
