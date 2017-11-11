@@ -11,12 +11,14 @@ test('minutelyStats', (t) => {
         var fileObj = JSON.parse(zlib.gunzipSync(params.ExpressionAttributeValues[':stats'].B));
         t.deepEqual(fileObj, {test: {create_node: 22, modify_node: 17}}, 'file contents as expected');
 
-        if (params.Key === (
-            '2017-10-13T15:20-002669949' || '2017-10-13T15:19-002669949')) {
-            t.ok(params.Key, 'keys are as expected');
+        if (params.Key.minute.S === '2017-10-13T15:19' ||
+            params.Key.minute.S === '2017-10-13T15:20') {
+            t.ok(true);
         } else {
-            t.error();
+            t.error(params.Key.minute.S, 'key not expected');
         }
+
+        t.equal(params.Key.sequence.S, '002669949');
 
         callback(null, {});
     });

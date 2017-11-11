@@ -140,6 +140,12 @@
                         "Environment": {"Ref": "Environment"},
                         "OutputPrefix": {"Ref": "OutputPrefix"},
                         "ReplicationPath": {"Ref": "ReplicationPath"}
+                        "MinutesTableStreamArn": {
+                            "Fn::GetAtt": [
+                                "MinutesTable",
+                                "StreamArn"
+                            ]
+                        }
                     }
                 }
             }
@@ -183,12 +189,18 @@
             "Type" : "AWS::DynamoDB::Table",
             "Properties": {
                 "AttributeDefinitions": [{
-                    "AttributeName" : "minute",
-                    "AttributeType" : "S"
+                    "AttributeName": "minute",
+                    "AttributeType": "S"
+                }, {
+                    "AttributeName": "sequence",
+                    "AttributeType": "S"
                 }],
                 "KeySchema": [{
                     "AttributeName": "minute",
                     "KeyType": "HASH"
+                }, {
+                    "AttributeName": "sequence",
+                    "KeyType": "RANGE"
                 }],
                 "ProvisionedThroughput": {
                     "ReadCapacityUnits": 5,
