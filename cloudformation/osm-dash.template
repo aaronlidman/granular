@@ -140,6 +140,7 @@
                         "Environment": {"Ref": "Environment"},
                         "OutputPrefix": {"Ref": "OutputPrefix"},
                         "ReplicationPath": {"Ref": "ReplicationPath"},
+                        "MinutesTableName": {"Ref": "MinutesTable"},
                         "MinutesTableStreamArn": {
                             "Fn::GetAtt": [
                                 "MinutesTable",
@@ -208,16 +209,6 @@
                 },
                 "StreamSpecification": {
                     "StreamViewType": "KEYS_ONLY"
-                },
-                "TableName": {
-                    "Fn::Join": [
-                        "",
-                        [
-                            "osm-dash-",
-                            { "Ref": "Environment" },
-                            "-minutes"
-                        ]
-                    ]
                 }
             }
         }
