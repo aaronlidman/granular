@@ -5,7 +5,7 @@ const request = require('./lib/request.js');
 const cwput = require('./lib/cwput.js');
 const write = require('./lib/write.js');
 
-module.exports.handler = function () {
+exports.handler = () => {
     request.get(process.env.ReplicationPath + 'minute/state.txt')
         .then(parse.state)
         .then(request.changes)
