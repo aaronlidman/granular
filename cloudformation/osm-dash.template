@@ -31,72 +31,78 @@
             "Type": "AWS::IAM::Role",
             "Properties": {
                 "AssumeRolePolicyDocument": {
-                    "Statement": [
-                        {
-                            "Effect": "Allow",
-                            "Principal": {
-                                "Service": "lambda.amazonaws.com"
-                            },
-                            "Action": "sts:AssumeRole"
-                        }
-                    ]
+                    "Statement": [{
+                        "Effect": "Allow",
+                        "Principal": {
+                            "Service": "lambda.amazonaws.com"
+                        },
+                        "Action": "sts:AssumeRole"
+                    }]
                 },
                 "Path": "/stack/lambda/",
                 "Policies": [{
                     "PolicyName": "osm-dash",
                     "PolicyDocument": {
-                        "Statement": [
-                            {
-                                "Action": [
-                                    "dynamodb:*"
-                                ],
-                                "Effect": "Allow",
-                                "Resource": {
-                                    "Fn::GetAtt": [
-                                        "MinutesTable",
-                                        "Arn"
-                                    ]
-                                }
-                            },{
-                                "Action": [
-                                    "cloudwatch:PutMetricData",
-                                    "cloudwatch:GetMetricStatistics"
-                                ],
-                                "Effect": "Allow",
-                                "Resource": "*"
-                            },{
-                                "Effect": "Allow",
-                                "Action": ["logs:*"],
-                                "Resource": "arn:aws:logs:*:*:*"
-                            },{
-                                "Effect": "Allow",
-                                "Action": [
-                                    "s3:HeadObject",
-                                    "s3:DeleteObject",
-                                    "s3:GetObject",
-                                    "s3:GetObjectAcl",
-                                    "s3:PutObject",
-                                    "s3:PutObjectAcl"
-                                ],
-                                "Resource": [
-                                    {
-                                        "Fn::Join": [
-                                            "",
-                                            [
-                                                "arn:aws:s3:::",
-                                                { "Ref": "Bucket" },
-                                                "/osm-dash/*"
-                                            ]
-                                        ]
-                                    }
+                        "Statement": [{
+                            "Action": [
+                                "dynamodb:*"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": {
+                                "Fn::GetAtt": [
+                                    "GranulesTable",
+                                    "Arn"
                                 ]
                             }
-                        ]
+                        }, {
+                            "Action": [
+                                "dynamodb:*"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": {
+                                "Fn::GetAtt": [
+                                    "MinutesTable",
+                                    "Arn"
+                                ]
+                            }
+                        }, {
+                            "Action": [
+                                "cloudwatch:PutMetricData",
+                                "cloudwatch:GetMetricStatistics"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": "*"
+                        }, {
+                            "Effect": "Allow",
+                            "Action": ["logs:*"],
+                            "Resource": "arn:aws:logs:*:*:*"
+                        }, {
+                            "Effect": "Allow",
+                            "Action": [
+                                "s3:HeadObject",
+                                "s3:DeleteObject",
+                                "s3:GetObject",
+                                "s3:GetObjectAcl",
+                                "s3:PutObject",
+                                "s3:PutObjectAcl"
+                            ],
+                            "Resource": [{
+                                "Fn::Join": [
+                                    "", [
+                                        "arn:aws:s3:::",
+                                        {
+                                            "Ref": "Bucket"
+                                        },
+                                        "/osm-dash/*"
+                                    ]
+                                ]
+                            }]
+                        }]
                     }
                 }]
             }
         },
-        "MinutelyLambda": {
+        "ReplicationFetcherLambda": {
             "Type": "AWS::Lambda::Function",
             "Properties": {
                 "Code": {
@@ -105,10 +111,12 @@
                     },
                     "S3Key": {
                         "Fn::Join": [
-                            "",
-                            [
-                                { "Ref": "SlugPrefix"},
-                                { "Ref": "GitSha" },
+                            "", [{
+                                    "Ref": "SlugPrefix"
+                                },
+                                {
+                                    "Ref": "GitSha"
+                                },
                                 ".zip"
                             ]
                         ]
@@ -116,14 +124,15 @@
                 },
                 "FunctionName": {
                     "Fn::Join": [
-                        "",
-                        [
-                            "osm-dash-minutely-",
-                            { "Ref": "Environment" }
+                        "", [
+                            "osm-dash-replication-fetcher-",
+                            {
+                                "Ref": "Environment"
+                            }
                         ]
                     ]
                 },
-                "Handler": "index.handler",
+                "Handler": "fetcher.handler",
                 "Runtime": "nodejs6.10",
                 "Timeout": 150,
                 "MemorySize": 128,
@@ -135,17 +144,23 @@
                 },
                 "Environment": {
                     "Variables": {
-                        "Bucket": {"Ref": "Bucket"},
-                        "GitSha": {"Ref": "GitSha"},
-                        "Environment": {"Ref": "Environment"},
-                        "OutputPrefix": {"Ref": "OutputPrefix"},
-                        "ReplicationPath": {"Ref": "ReplicationPath"},
-                        "MinutesTableName": {"Ref": "MinutesTable"},
-                        "MinutesTableStreamArn": {
-                            "Fn::GetAtt": [
-                                "MinutesTable",
-                                "StreamArn"
-                            ]
+                        "Bucket": {
+                            "Ref": "Bucket"
+                        },
+                        "GitSha": {
+                            "Ref": "GitSha"
+                        },
+                        "Environment": {
+                            "Ref": "Environment"
+                        },
+                        "OutputPrefix": {
+                            "Ref": "OutputPrefix"
+                        },
+                        "ReplicationPath": {
+                            "Ref": "ReplicationPath"
+                        },
+                        "GranulesTable": {
+                            "Ref": "GranulesTable"
                         }
                     }
                 }
@@ -157,37 +172,37 @@
                 "Action": "lambda:InvokeFunction",
                 "FunctionName": {
                     "Fn::GetAtt": [
-                        "MinutelyLambda",
+                        "ReplicationFetcherLambda",
                         "Arn"
                     ]
                 },
                 "Principal": "events.amazonaws.com",
                 "SourceArn": {
                     "Fn::GetAtt": [
-                        "MinutelyLambdaTrigger",
+                        "ReplicationFetcherLambdaTrigger",
                         "Arn"
                     ]
                 }
             }
         },
-        "MinutelyLambdaTrigger": {
+        "ReplicationFetcherLambdaTrigger": {
             "Type": "AWS::Events::Rule",
             "Properties": {
                 "ScheduleExpression": "rate(1 minute)",
                 "State": "ENABLED",
                 "Targets": [{
-                    "Id": "MinutelyLambda",
+                    "Id": "ReplicationFetcherLambda",
                     "Arn": {
                         "Fn::GetAtt": [
-                            "MinutelyLambda",
+                            "ReplicationFetcherLambda",
                             "Arn"
                         ]
                     }
                 }]
             }
         },
-        "MinutesTable": {
-            "Type" : "AWS::DynamoDB::Table",
+        "GranulesTable": {
+            "Type": "AWS::DynamoDB::Table",
             "Properties": {
                 "AttributeDefinitions": [{
                     "AttributeName": "minute",
@@ -211,33 +226,130 @@
                     "StreamViewType": "KEYS_ONLY"
                 }
             }
+        },
+        "AggregatorLambda": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "S3Bucket": {
+                        "Ref": "Bucket"
+                    },
+                    "S3Key": {
+                        "Fn::Join": [
+                            "", [{
+                                    "Ref": "SlugPrefix"
+                                },
+                                {
+                                    "Ref": "GitSha"
+                                },
+                                ".zip"
+                            ]
+                        ]
+                    }
+                },
+                "FunctionName": {
+                    "Fn::Join": [
+                        "", [
+                            "osm-dash-aggregator-",
+                            {
+                                "Ref": "Environment"
+                            }
+                        ]
+                    ]
+                },
+                "Handler": "aggregator.handler",
+                "Runtime": "nodejs6.10",
+                "Timeout": 300,
+                "MemorySize": 128,
+                "Role": {
+                    "Fn::GetAtt": [
+                        "LambdaRole",
+                        "Arn"
+                    ]
+                },
+                "Environment": {
+                    "Variables": {
+                        "Bucket": {
+                            "Ref": "Bucket"
+                        },
+                        "GitSha": {
+                            "Ref": "GitSha"
+                        },
+                        "Environment": {
+                            "Ref": "Environment"
+                        },
+                        "OutputPrefix": {
+                            "Ref": "OutputPrefix"
+                        },
+                        "ReplicationPath": {
+                            "Ref": "ReplicationPath"
+                        },
+                        "GranulesTable": {
+                            "Ref": "GranulesTable"
+                        },
+                        "MinutesTable": {
+                            "Ref": "MinutesTable"
+                        }
+                    }
+                }
+            }
+        },
+        "MinutesTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+                "AttributeDefinitions": [{
+                    "AttributeName": "period",
+                    "AttributeType": "S"
+                }],
+                "KeySchema": [{
+                    "AttributeName": "period",
+                    "KeyType": "HASH"
+                }],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": 2,
+                    "WriteCapacityUnits": 2
+                },
+                "StreamSpecification": {
+                    "StreamViewType": "KEYS_ONLY"
+                }
+            }
+        },
+        "AggregatorLambdaTrigger": {
+            "Type": "AWS::Lambda::EventSourceMapping",
+            "Properties": {
+                "BatchSize": 1000,
+                "Enabled": true,
+                "EventSourceArn": {
+                    "Fn::GetAtt": [
+                        "GranulesTable",
+                        "StreamArn"
+                    ]
+                },
+                "FunctionName": {
+                    "Fn::GetAtt": [
+                        "AggregatorLambda",
+                        "Arn"
+                    ]
+                },
+                "StartingPosition": "LATEST"
+            }
         }
     },
     "Outputs": {
         "SlugLocation": {
             "Value": {
                 "Fn::Join": [
-                    "",
-                    [
-                        { "Ref": "Bucket" },
+                    "", [{
+                            "Ref": "Bucket"
+                        },
                         "/",
-                        { "Ref": "SlugPrefix" },
-                        { "Ref": "GitSha" },
+                        {
+                            "Ref": "SlugPrefix"
+                        },
+                        {
+                            "Ref": "GitSha"
+                        },
                         ".zip"
-                    ]
-                ]
-            }
-        },
-        "SummariesDestination": {
-            "Value": {
-                "Fn::Join": [
-                    "",
-                    [
-                        "s3://",
-                        { "Ref": "Bucket" },
-                        "/osm-dash/",
-                        { "Ref": "Environment" },
-                        "/"
                     ]
                 ]
             }
