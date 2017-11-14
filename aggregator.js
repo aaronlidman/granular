@@ -15,7 +15,7 @@ exports.handler = (event) => {
 
     updates.forEach((key) => {
         dynamo.query({
-            TableName: process.env.MinutesTable,
+            TableName: process.env.GranulesTable,
             Select: 'SPECIFIC_ATTRIBUTES',
             KeyConditionExpression: '#MIN = :minute and begins_with(#SEQ, :sequence)',
             ProjectionExpression: '#STATS',
