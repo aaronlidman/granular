@@ -333,11 +333,11 @@
             "Type": "AWS::DynamoDB::Table",
             "Properties": {
                 "AttributeDefinitions": [{
-                    "AttributeName": "period",
+                    "AttributeName": "minute",
                     "AttributeType": "S"
                 }],
                 "KeySchema": [{
-                    "AttributeName": "period",
+                    "AttributeName": "minute",
                     "KeyType": "HASH"
                 }],
                 "ProvisionedThroughput": {

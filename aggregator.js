@@ -46,6 +46,27 @@ exports.handler = (event) => {
             });
 
             console.log(key, reducedStats);
+
+            // insert into the other table
+            dynamo.updateItem({
+                TableName: process.env.MinutesTable,
+                Key: {'minute': {S: key}},
+                UpdateExpression: 'SET #CREATE = :create, #MODIFY = :modify, #DELETE = :delete',
+                ExpressionAttributeNames: {
+                    '#CREATE': 'create',
+                    '#MODIFY': 'modify',
+                    '#DELETE': 'delete'
+                },
+                ExpressionAttributeValues: {
+                    ':create': {N: reducedStats.create},
+                    ':modify': {N: reducedStats.modify},
+                    ':delete': {N: reducedStats.delete}
+                },
+            }, (err, data) => {
+                if (err) return console.log('minute insert', err);
+                console.log(data);
+            });
+
         });
     });
 };
