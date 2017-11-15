@@ -15,7 +15,7 @@ exports.handler = (event) => {
 
     updates.forEach((key) => {
         dynamo.query({
-            TableName: process.env.GranulesTable,
+            TableName: process.env.MinutesTable,
             Select: 'SPECIFIC_ATTRIBUTES',
             KeyConditionExpression: '#MIN = :minute and begins_with(#SEQ, :sequence)',
             ProjectionExpression: '#STATS',
@@ -49,7 +49,7 @@ exports.handler = (event) => {
 
             // insert into the other table
             dynamo.updateItem({
-                TableName: process.env.MinutesTable,
+                TableName: process.env.DaysTable,
                 Key: {'minute': {S: key}},
                 UpdateExpression: 'SET #CREATE = :create, #MODIFY = :modify, #DELETE = :delete',
                 ExpressionAttributeNames: {

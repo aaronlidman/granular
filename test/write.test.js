@@ -29,7 +29,7 @@ test('minutelyStats', (t) => {
     process.env.Bucket = 'bucket';
     process.env.Environment = 'environment';
     process.env.OutputPrefix = 'stack/';
-    process.env.GranulesTable = 'minutesss';
+    process.env.MinutesTable = 'minutesss';
 
     let promises = [];
 
