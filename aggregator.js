@@ -58,9 +58,9 @@ exports.handler = (event) => {
                     '#DELETE': 'delete'
                 },
                 ExpressionAttributeValues: {
-                    ':create': {N: reducedStats.create},
-                    ':modify': {N: reducedStats.modify},
-                    ':delete': {N: reducedStats.delete}
+                    ':create': {N: reducedStats.create.toString()},
+                    ':modify': {N: reducedStats.modify.toString()},
+                    ':delete': {N: reducedStats.delete.toString()}
                 },
             }, (err, data) => {
                 if (err) return console.log('minute insert', err);
