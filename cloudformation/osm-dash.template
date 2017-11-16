@@ -388,7 +388,7 @@
                 "Enabled": true,
                 "EventSourceArn": {
                     "Fn::GetAtt": [
-                        "DaysTable",
+                        "MinutesTable",
                         "StreamArn"
                     ]
                 },
