@@ -409,14 +409,14 @@
                     "AttributeName": "type",
                     "AttributeType": "S"
                 }, {
-                    "AttributeName": "timeRange",
+                    "AttributeName": "time",
                     "AttributeType": "S"
                 }],
                 "KeySchema": [{
                     "AttributeName": "type",
                     "KeyType": "HASH"
                 }, {
-                    "AttributeName": "timerange",
+                    "AttributeName": "time",
                     "KeyType": "RANGE"
                 }],
                 "ProvisionedThroughput": {
