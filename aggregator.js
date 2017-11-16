@@ -47,11 +47,19 @@ exports.handler = (event) => {
 
             console.log(key, reducedStats);
 
+            const date = new Date(key);
+            const year = date.getUTCFullYear();
+            const monthAndDate = [date.getUTCMonth() + 1, data.getUTCDate()].join('-');
+            const offset = (date.getUTCHours() * 60) + date.getUTCMinutes();
+
             // insert into the other table
             dynamo.updateItem({
                 TableName: process.env.DaysTable,
-                Key: {'minute': {S: key}},
-                UpdateExpression: 'SET #CREATE = :create, #MODIFY = :modify, #DELETE = :delete',
+                Key: {
+                    'year': {N: year.toString()},
+                    'day': {S: monthAndDate}
+                },
+                UpdateExpression: 'SET #CREATE[' + offset + '] = :create, #MODIFY[' + offset + '] = :modify, #DELETE[' + offset + '] = :delete',
                 ExpressionAttributeNames: {
                     '#CREATE': 'create',
                     '#MODIFY': 'modify',
