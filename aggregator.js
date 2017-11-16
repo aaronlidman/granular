@@ -49,7 +49,7 @@ exports.handler = (event) => {
 
             const date = new Date(key);
             const year = date.getUTCFullYear();
-            const monthAndDate = [date.getUTCMonth() + 1, data.getUTCDate()].join('-');
+            const monthAndDate = [date.getUTCMonth() + 1, date.getUTCDate()].join('-');
             const offset = (date.getUTCHours() * 60) + date.getUTCMinutes();
 
             // insert into the other table
