@@ -50,7 +50,7 @@
                             "Effect": "Allow",
                             "Resource": {
                                 "Fn::GetAtt": [
-                                    "MinutesTable",
+                                    "TimeTable",
                                     "Arn"
                                 ]
                             }
@@ -63,63 +63,7 @@
                                 "Fn::Join": [
                                     "", [{
                                             "Fn::GetAtt": [
-                                                "MinutesTable",
-                                                "Arn"
-                                            ]
-                                        },
-                                        "/stream/*"
-                                    ]
-                                ]
-                            }
-                        }, {
-                            "Action": [
-                                "dynamodb:*"
-                            ],
-                            "Effect": "Allow",
-                            "Resource": {
-                                "Fn::GetAtt": [
-                                    "DaysTable",
-                                    "Arn"
-                                ]
-                            }
-                        }, {
-                            "Action": [
-                                "dynamodb:*"
-                            ],
-                            "Effect": "Allow",
-                            "Resource": {
-                                "Fn::Join": [
-                                    "", [{
-                                            "Fn::GetAtt": [
-                                                "DaysTable",
-                                                "Arn"
-                                            ]
-                                        },
-                                        "/stream/*"
-                                    ]
-                                ]
-                            }
-                        }, {
-                            "Action": [
-                                "dynamodb:*"
-                            ],
-                            "Effect": "Allow",
-                            "Resource": {
-                                "Fn::GetAtt": [
-                                    "ViewsTable",
-                                    "Arn"
-                                ]
-                            }
-                        }, {
-                            "Action": [
-                                "dynamodb:*"
-                            ],
-                            "Effect": "Allow",
-                            "Resource": {
-                                "Fn::Join": [
-                                    "", [{
-                                            "Fn::GetAtt": [
-                                                "ViewsTable",
+                                                "TimeTable",
                                                 "Arn"
                                             ]
                                         },
@@ -214,14 +158,11 @@
                         "Environment": {
                             "Ref": "Environment"
                         },
-                        "OutputPrefix": {
-                            "Ref": "OutputPrefix"
-                        },
                         "ReplicationPath": {
                             "Ref": "ReplicationPath"
                         },
-                        "MinutesTable": {
-                            "Ref": "MinutesTable"
+                        "TimeTable": {
+                            "Ref": "TimeTable"
                         }
                     }
                 }
@@ -260,32 +201,6 @@
                         ]
                     }
                 }]
-            }
-        },
-        "MinutesTable": {
-            "Type": "AWS::DynamoDB::Table",
-            "Properties": {
-                "AttributeDefinitions": [{
-                    "AttributeName": "minute",
-                    "AttributeType": "S"
-                }, {
-                    "AttributeName": "sequence",
-                    "AttributeType": "S"
-                }],
-                "KeySchema": [{
-                    "AttributeName": "minute",
-                    "KeyType": "HASH"
-                }, {
-                    "AttributeName": "sequence",
-                    "KeyType": "RANGE"
-                }],
-                "ProvisionedThroughput": {
-                    "ReadCapacityUnits": 2,
-                    "WriteCapacityUnits": 1
-                },
-                "StreamSpecification": {
-                    "StreamViewType": "KEYS_ONLY"
-                }
             }
         },
         "AggregatorLambda": {
@@ -339,42 +254,33 @@
                         "Environment": {
                             "Ref": "Environment"
                         },
-                        "OutputPrefix": {
-                            "Ref": "OutputPrefix"
-                        },
-                        "ReplicationPath": {
-                            "Ref": "ReplicationPath"
-                        },
-                        "MinutesTable": {
-                            "Ref": "MinutesTable"
-                        },
-                        "DaysTable": {
-                            "Ref": "DaysTable"
+                        "TimeTable": {
+                            "Ref": "TimeTable"
                         }
                     }
                 }
             }
         },
-        "DaysTable": {
+        "TimeTable": {
             "Type": "AWS::DynamoDB::Table",
             "Properties": {
                 "AttributeDefinitions": [{
-                    "AttributeName": "year",
-                    "AttributeType": "N"
-                }, {
-                    "AttributeName": "day",
+                    "AttributeName": "parent",
                     "AttributeType": "S"
+                }, {
+                    "AttributeName": "sequence",
+                    "AttributeType": "N"
                 }],
                 "KeySchema": [{
-                    "AttributeName": "year",
+                    "AttributeName": "parent",
                     "KeyType": "HASH"
                 }, {
-                    "AttributeName": "day",
+                    "AttributeName": "sequence",
                     "KeyType": "RANGE"
                 }],
                 "ProvisionedThroughput": {
-                    "ReadCapacityUnits": 2,
-                    "WriteCapacityUnits": 2
+                    "ReadCapacityUnits": 1,
+                    "WriteCapacityUnits": 1
                 },
                 "StreamSpecification": {
                     "StreamViewType": "KEYS_ONLY"
@@ -385,10 +291,10 @@
             "Type": "AWS::Lambda::EventSourceMapping",
             "Properties": {
                 "BatchSize": 1000,
-                "Enabled": true,
+                "Enabled": false,
                 "EventSourceArn": {
                     "Fn::GetAtt": [
-                        "MinutesTable",
+                        "TimeTable",
                         "StreamArn"
                     ]
                 },
@@ -401,102 +307,6 @@
                 "StartingPosition": "LATEST"
             },
             "DependsOn": "LambdaRole"
-        },
-        "ViewsTable": {
-            "Type": "AWS::DynamoDB::Table",
-            "Properties": {
-                "AttributeDefinitions": [{
-                    "AttributeName": "type",
-                    "AttributeType": "S"
-                }, {
-                    "AttributeName": "time",
-                    "AttributeType": "S"
-                }],
-                "KeySchema": [{
-                    "AttributeName": "type",
-                    "KeyType": "HASH"
-                }, {
-                    "AttributeName": "time",
-                    "KeyType": "RANGE"
-                }],
-                "ProvisionedThroughput": {
-                    "ReadCapacityUnits": 1,
-                    "WriteCapacityUnits": 1
-                },
-                "StreamSpecification": {
-                    "StreamViewType": "KEYS_ONLY"
-                }
-            }
-        },
-        "ViewerLambda": {
-            "Type": "AWS::Lambda::Function",
-            "Properties": {
-                "Code": {
-                    "S3Bucket": {
-                        "Ref": "Bucket"
-                    },
-                    "S3Key": {
-                        "Fn::Join": [
-                            "", [{
-                                    "Ref": "SlugPrefix"
-                                },
-                                {
-                                    "Ref": "GitSha"
-                                },
-                                ".zip"
-                            ]
-                        ]
-                    }
-                },
-                "FunctionName": {
-                    "Fn::Join": [
-                        "", [
-                            "osm-dash-viewer-",
-                            {
-                                "Ref": "Environment"
-                            }
-                        ]
-                    ]
-                },
-                "Handler": "aggregator.handler",
-                "Runtime": "nodejs6.10",
-                "Timeout": 300,
-                "MemorySize": 512,
-                "Role": {
-                    "Fn::GetAtt": [
-                        "LambdaRole",
-                        "Arn"
-                    ]
-                },
-                "Environment": {
-                    "Variables": {
-                        "Bucket": {
-                            "Ref": "Bucket"
-                        },
-                        "GitSha": {
-                            "Ref": "GitSha"
-                        },
-                        "Environment": {
-                            "Ref": "Environment"
-                        },
-                        "OutputPrefix": {
-                            "Ref": "OutputPrefix"
-                        },
-                        "ReplicationPath": {
-                            "Ref": "ReplicationPath"
-                        },
-                        "MinutesTable": {
-                            "Ref": "MinutesTable"
-                        },
-                        "DaysTable": {
-                            "Ref": "DaysTable"
-                        },
-                        "ViewsTable": {
-                            "Ref": "ViewsTable"
-                        }
-                    }
-                }
-            }
         }
     },
     "Outputs": {
