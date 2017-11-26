@@ -3,6 +3,7 @@
 const parse = require('./lib/parse.js');
 const request = require('./lib/request.js');
 const cwput = require('./lib/cwput.js');
+const queue = require('./lib/queue');
 const write = require('./lib/write.js');
 
 exports.handler = () => {
@@ -12,5 +13,6 @@ exports.handler = () => {
         .then(parse.changes)
         .then(cwput.overallMetrics)
         .then(write.minutelyStats)
+        .then(queue.sequence)
         .catch(err => { throw new Error(err); });
 };
