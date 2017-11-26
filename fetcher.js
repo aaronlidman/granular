@@ -12,6 +12,5 @@ exports.handler = () => {
         .then(parse.changes)
         .then(cwput.overallMetrics)
         .then(write.minutelyStats)
-        .then((data) => console.log(data))
-        .catch((err) => console.log(err));
+        .catch(err => { throw new Error(err); });
 };
