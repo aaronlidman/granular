@@ -8,7 +8,9 @@ const write = require('../lib/write.js');
 
 test('minutelyStats', (t) => {
     AWS.mock('DynamoDB', 'updateItem', function (params, callback) {
-        var fileObj = JSON.parse(zlib.gunzipSync(params.ExpressionAttributeValues[':stats'].B));
+        console.log('fucker');
+
+        var fileObj = JSON.parse(zlib.gunzipSync(params.ExpressionAttributeValues[':userCounts'].B));
         t.deepEqual(fileObj, {test: {create_node: 22, modify_node: 17}}, 'file contents as expected');
 
         if (params.Key.minute.S === '2017-10-13T15:19' ||
@@ -29,19 +31,29 @@ test('minutelyStats', (t) => {
     process.env.Bucket = 'bucket';
     process.env.Environment = 'environment';
     process.env.OutputPrefix = 'stack/';
-    process.env.MinutesTable = 'minutesss';
+    process.env.SequenceTable = 'sequencess';
 
     let promises = [];
 
     // plain old write
     promises.push(write.minutelyStats({
-        stats: {'2017-10-13T15:20:00Z': {'test': {create_node: 22, modify_node: 17}}},
+        stats: {
+            '2017-10-13T15:20:00Z': {
+                'userCounts': {'test': {create_node: 22, modify_node: 17}},
+                'overallCounts': {create_node: 22, modify_node: 17}
+            }
+        },
         state: {sequenceNumber: '002669949'}
     }).then(t.ok).catch(t.error));
 
     // catch missing sequence
     promises.push(write.minutelyStats({
-        stats: {'2017-10-13T15:20:00Z': {'test': {create_node: 22, modify_node: 17}}},
+        stats: {
+            '2017-10-13T15:20:00Z': {
+                'userCounts': {'test': {create_node: 22, modify_node: 17}},
+                'overallCounts': {create_node: 22, modify_node: 17}
+            }
+        },
     }).catch((err) => {
         t.equal(err, 'missing sequenceNumber', 'successfully errors on missing sequenceNumber');
     }));
@@ -49,8 +61,14 @@ test('minutelyStats', (t) => {
     // write multiple files
     promises.push(write.minutelyStats({
         stats: {
-            '2017-10-13T15:20:00Z': {'test': {create_node: 22, modify_node: 17}},
-            '2017-10-13T15:19:00Z': {'test': {create_node: 22, modify_node: 17}}
+            '2017-10-13T15:20:00Z': {
+                'userCounts': {'test': {create_node: 22, modify_node: 17}},
+                'overallCounts': {create_node: 22, modify_node: 17}
+            },
+            '2017-10-13T15:19:00Z': {
+                'userCounts': {'test': {create_node: 22, modify_node: 17}},
+                'overallCounts': {create_node: 22, modify_node: 17}
+            }
         },
         state: {sequenceNumber: '002669949'}
     }).then((data) => {
@@ -60,9 +78,9 @@ test('minutelyStats', (t) => {
     }).catch(t.error));
 
     Promise.all(promises)
-        .then(() => { AWS.restore(); })
+        .then(() => AWS.restore())
         .then(t.end)
-        .catch((error) => {
+        .catch(error => {
             t.error(error);
             t.end();
         });
