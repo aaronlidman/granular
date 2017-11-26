@@ -8,19 +8,17 @@ const write = require('../lib/write.js');
 
 test('minutelyStats', (t) => {
     AWS.mock('DynamoDB', 'updateItem', function (params, callback) {
-        console.log('fucker');
-
         var fileObj = JSON.parse(zlib.gunzipSync(params.ExpressionAttributeValues[':userCounts'].B));
         t.deepEqual(fileObj, {test: {create_node: 22, modify_node: 17}}, 'file contents as expected');
 
-        if (params.Key.minute.S === '2017-10-13T15:19' ||
-            params.Key.minute.S === '2017-10-13T15:20') {
+        if (params.Key.parent.S === '2017-10-13T15:19' ||
+            params.Key.parent.S === '2017-10-13T15:20') {
             t.ok(true);
         } else {
-            t.error(params.Key.minute.S, 'key not expected');
+            t.error(params.Key.parent.S, 'key not expected');
         }
 
-        t.equal(params.Key.sequence.S, '002669949');
+        t.equal(params.Key.sequence.N, '002669949');
 
         callback(null, {});
     });
