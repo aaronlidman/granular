@@ -31,7 +31,7 @@ test('minutelyStats', (t) => {
     process.env.Bucket = 'bucket';
     process.env.Environment = 'environment';
     process.env.OutputPrefix = 'stack/';
-    process.env.SequenceTable = 'sequencess';
+    process.env.MainTable = 'maintableee';
 
     let promises = [];
 
@@ -73,7 +73,7 @@ test('minutelyStats', (t) => {
         state: {sequenceNumber: '002669949'}
     }).then((data) => {
         t.deepEqual(data,
-            [{}, {}],
+            ['2017-10-13T15:20', '2017-10-13T15:19'],
             'successfully wrote 2 files');
     }).catch(t.error));
 
