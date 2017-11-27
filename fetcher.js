@@ -13,6 +13,6 @@ exports.handler = () => {
         .then(parse.changes)
         .then(cwput.overallMetrics)
         .then(write.minutelyStats)
-        .then(queue.sequence)
+        .then(queue.minuteAggregation)
         .catch(err => { throw new Error(err); });
 };
