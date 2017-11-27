@@ -6,7 +6,7 @@ const cwput = require('./lib/cwput.js');
 const queue = require('./lib/queue');
 const write = require('./lib/write.js');
 
-exports.handler = () => {
+exports.handler = (event, context, callback) => {
     request.get(process.env.ReplicationPath + 'minute/state.txt')
         .then(parse.state)
         .then(request.changes)
@@ -14,5 +14,5 @@ exports.handler = () => {
         .then(cwput.overallMetrics)
         .then(write.minutelyStats)
         .then(queue.minuteAggregation)
-        .catch(err => { console.error(err, err.stack); });
+        .catch(callback);
 };
