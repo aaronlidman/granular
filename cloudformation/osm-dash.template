@@ -63,7 +63,9 @@
                             "Resource": "*"
                         }, {
                             "Effect": "Allow",
-                            "Action": ["logs:*"],
+                            "Action": [
+                                "logs:*"
+                            ],
                             "Resource": "arn:aws:logs:*:*:*"
                         }, {
                             "Effect": "Allow",
@@ -85,6 +87,38 @@
                                     ]
                                 ]
                             }]
+                        }, {
+                            "Action": [
+                                "sqs:ChangeMessageVisibility",
+                                "sqs:ChangeMessageVisibilityBatch",
+                                "sqs:DeleteMessage",
+                                "sqs:ReceiveMessage",
+                                "sqs:SendMessage",
+                                "sqs:SendMessageBatch"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": {
+                                "Fn::GetAtt": [
+                                    "perMinQueue",
+                                    "Arn"
+                                ]
+                            }
+                        }, {
+                            "Action": [
+                                "sqs:ChangeMessageVisibility",
+                                "sqs:ChangeMessageVisibilityBatch",
+                                "sqs:DeleteMessage",
+                                "sqs:ReceiveMessage",
+                                "sqs:SendMessage",
+                                "sqs:SendMessageBatch"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": {
+                                "Fn::GetAtt": [
+                                    "perHourQueue",
+                                    "Arn"
+                                ]
+                            }
                         }]
                     }
                 }]
@@ -274,13 +308,13 @@
             }
         },
         "perMinQueue": {
-            "Type" : "AWS::SQS::Queue",
+            "Type": "AWS::SQS::Queue",
             "Properties": {
                 "MessageRetentionPeriod": 1209600
             }
         },
-        "perTenMinQueue": {
-            "Type" : "AWS::SQS::Queue",
+        "perHourQueue": {
+            "Type": "AWS::SQS::Queue",
             "Properties": {
                 "MessageRetentionPeriod": 1209600
             }
