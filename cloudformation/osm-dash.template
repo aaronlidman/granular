@@ -146,6 +146,9 @@
                         },
                         "MainTable": {
                             "Ref": "MainTable"
+                        },
+                        "perMinQueue": {
+                            "Ref": "perMinQueue"
                         }
                     }
                 }
