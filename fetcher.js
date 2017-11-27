@@ -14,5 +14,5 @@ exports.handler = () => {
         .then(cwput.overallMetrics)
         .then(write.minutelyStats)
         .then(queue.minuteAggregation)
-        .catch(err => { throw new Error(err); });
+        .catch(err => { console.error(err, err.stack); });
 };
