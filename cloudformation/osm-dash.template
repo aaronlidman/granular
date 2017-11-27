@@ -144,8 +144,8 @@
                         "ReplicationPath": {
                             "Ref": "ReplicationPath"
                         },
-                        "BigTable": {
-                            "Ref": "BigTable"
+                        "MainTable": {
+                            "Ref": "MainTable"
                         }
                     }
                 }
