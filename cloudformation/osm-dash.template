@@ -50,25 +50,8 @@
                             "Effect": "Allow",
                             "Resource": {
                                 "Fn::GetAtt": [
-                                    "TimeTable",
+                                    "MainTable",
                                     "Arn"
-                                ]
-                            }
-                        }, {
-                            "Action": [
-                                "dynamodb:*"
-                            ],
-                            "Effect": "Allow",
-                            "Resource": {
-                                "Fn::Join": [
-                                    "", [{
-                                            "Fn::GetAtt": [
-                                                "TimeTable",
-                                                "Arn"
-                                            ]
-                                        },
-                                        "/stream/*"
-                                    ]
                                 ]
                             }
                         }, {
@@ -161,8 +144,8 @@
                         "ReplicationPath": {
                             "Ref": "ReplicationPath"
                         },
-                        "TimeTable": {
-                            "Ref": "TimeTable"
+                        "BigTable": {
+                            "Ref": "BigTable"
                         }
                     }
                 }
@@ -254,14 +237,17 @@
                         "Environment": {
                             "Ref": "Environment"
                         },
-                        "TimeTable": {
-                            "Ref": "TimeTable"
+                        "MainTable": {
+                            "Ref": "MainTable"
+                        },
+                        "perMinQueue": {
+                            "Ref": "perMinQueue"
                         }
                     }
                 }
             }
         },
-        "TimeTable": {
+        "MainTable": {
             "Type": "AWS::DynamoDB::Table",
             "Properties": {
                 "AttributeDefinitions": [{
@@ -281,32 +267,20 @@
                 "ProvisionedThroughput": {
                     "ReadCapacityUnits": 1,
                     "WriteCapacityUnits": 1
-                },
-                "StreamSpecification": {
-                    "StreamViewType": "KEYS_ONLY"
                 }
             }
         },
-        "AggregatorLambdaTrigger": {
-            "Type": "AWS::Lambda::EventSourceMapping",
+        "perMinQueue": {
+            "Type" : "AWS::SQS::Queue",
             "Properties": {
-                "BatchSize": 1000,
-                "Enabled": false,
-                "EventSourceArn": {
-                    "Fn::GetAtt": [
-                        "TimeTable",
-                        "StreamArn"
-                    ]
-                },
-                "FunctionName": {
-                    "Fn::GetAtt": [
-                        "AggregatorLambda",
-                        "Arn"
-                    ]
-                },
-                "StartingPosition": "LATEST"
-            },
-            "DependsOn": "LambdaRole"
+                "MessageRetentionPeriod": 1209600
+            }
+        },
+        "perTenMinQueue": {
+            "Type" : "AWS::SQS::Queue",
+            "Properties": {
+                "MessageRetentionPeriod": 1209600
+            }
         }
     },
     "Outputs": {
