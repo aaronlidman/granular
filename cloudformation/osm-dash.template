@@ -115,7 +115,7 @@
                             "Effect": "Allow",
                             "Resource": {
                                 "Fn::GetAtt": [
-                                    "perHourQueue",
+                                    "perTenMinQueue",
                                     "Arn"
                                 ]
                             }
@@ -127,6 +127,7 @@
         "FetcherLambda": {
             "Type": "AWS::Lambda::Function",
             "Properties": {
+                "Description": "Fetches, parses, and writes metrics for the current minutely OSM file, every minute.",
                 "Code": {
                     "S3Bucket": {
                         "Ref": "Bucket"
@@ -225,6 +226,7 @@
         },
         "AggregatorLambda": {
             "Type": "AWS::Lambda::Function",
+            "Description": "Aggregates metrics spanning various time ranges.",
             "Properties": {
                 "Code": {
                     "S3Bucket": {
@@ -279,6 +281,9 @@
                         },
                         "perMinQueue": {
                             "Ref": "perMinQueue"
+                        },
+                        "perTenMinQueue": {
+                            "Ref": "perTenMinQueue"
                         }
                     }
                 }
@@ -310,13 +315,91 @@
         "perMinQueue": {
             "Type": "AWS::SQS::Queue",
             "Properties": {
-                "MessageRetentionPeriod": 1209600
+                "MessageRetentionPeriod": 1209600,
+                "ReceiveMessageWaitTimeSeconds": 20
             }
         },
-        "perHourQueue": {
+        "perTenMinQueue": {
             "Type": "AWS::SQS::Queue",
             "Properties": {
-                "MessageRetentionPeriod": 1209600
+                "MessageRetentionPeriod": 1209600,
+                "ReceiveMessageWaitTimeSeconds": 20
+            }
+        },
+        "perMinInvokePermissions": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+                "Action": "lambda:InvokeFunction",
+                "FunctionName": {
+                    "Fn::GetAtt": [
+                        "AggregatorLambda",
+                        "Arn"
+                    ]
+                },
+                "Principal": "events.amazonaws.com",
+                "SourceArn": {
+                    "Fn::GetAtt": [
+                        "perMinAggregatorTrigger",
+                        "Arn"
+                    ]
+                }
+            }
+        },
+        "perMinAggregatorTrigger": {
+            "Type": "AWS::Events::Rule",
+            "Properties": {
+                "ScheduleExpression": "rate(1 minute)",
+                "EventPattern": {
+                    "source": "trigger.perMin"
+                },
+                "State": "ENABLED",
+                "Targets": [{
+                    "Id": "AggregatorLambda",
+                    "Arn": {
+                        "Fn::GetAtt": [
+                            "AggregatorLambda",
+                            "Arn"
+                        ]
+                    }
+                }]
+            }
+        },
+        "perTenMinInvokePermissions": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+                "Action": "lambda:InvokeFunction",
+                "FunctionName": {
+                    "Fn::GetAtt": [
+                        "AggregatorLambda",
+                        "Arn"
+                    ]
+                },
+                "Principal": "events.amazonaws.com",
+                "SourceArn": {
+                    "Fn::GetAtt": [
+                        "perTenMinAggregatorTrigger",
+                        "Arn"
+                    ]
+                }
+            }
+        },
+        "perTenMinAggregatorTrigger": {
+            "Type": "AWS::Events::Rule",
+            "Properties": {
+                "ScheduleExpression": "rate(10 minutes)",
+                "EventPattern": {
+                    "source": "trigger.perTenMin"
+                },
+                "State": "ENABLED",
+                "Targets": [{
+                    "Id": "AggregatorLambda",
+                    "Arn": {
+                        "Fn::GetAtt": [
+                            "AggregatorLambda",
+                            "Arn"
+                        ]
+                    }
+                }]
             }
         }
     },
