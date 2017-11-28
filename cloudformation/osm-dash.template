@@ -349,12 +349,10 @@
             "Type": "AWS::Events::Rule",
             "Properties": {
                 "ScheduleExpression": "rate(1 minute)",
-                "EventPattern": {
-                    "source": "trigger.perMin"
-                },
                 "State": "ENABLED",
                 "Targets": [{
                     "Id": "AggregatorLambda",
+                    "Input": "{\"source\":\"perMinTrigger\"}",
                     "Arn": {
                         "Fn::GetAtt": [
                             "AggregatorLambda",
@@ -387,12 +385,10 @@
             "Type": "AWS::Events::Rule",
             "Properties": {
                 "ScheduleExpression": "rate(10 minutes)",
-                "EventPattern": {
-                    "source": "trigger.perTenMin"
-                },
                 "State": "ENABLED",
                 "Targets": [{
                     "Id": "AggregatorLambda",
+                    "Input": "{\"source\":\"perTenMinTrigger\"}",
                     "Arn": {
                         "Fn::GetAtt": [
                             "AggregatorLambda",

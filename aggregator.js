@@ -10,7 +10,7 @@ const userCountsLib = require('./lib/userCounts');
 const overallCountsLib = require('./lib/overallCounts');
 
 exports.handler = (event, context, callback) => {
-    processNext(event.detail, callback);
+    processNext(event, callback);
 };
 
 function processNext(context, callback) {
