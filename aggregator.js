@@ -9,6 +9,10 @@ const sqs = new AWS.SQS({region: region});
 const userCountsLib = require('./lib/userCounts');
 const overallCountsLib = require('./lib/overallCounts');
 
+module.exports = {};
+module.exports.getChildren = getChildren;
+module.exports.mergeChildren = mergeChildren;
+
 exports.handler = (event, context, callback) => {
     processNext(event, callback);
 };
@@ -112,26 +116,31 @@ function getChildren(context) {
 }
 
 function mergeChildren(context) {
-    // merges children of various formats
+    // merges children into various formats for the given time period
+    // minutes contain scalar values
+    // everything else contains arrays, at various resolutions of minutely totals
 
     if (context.job.jobType === 'minute') {
-        let userCounts = userCountsLib.mergeTotals(context.job.children);
-        userCounts = userCountsLib.collapseTotals(userCounts);
+        let mergedUsers = userCountsLib.mergeTotals(context.job.children);
+        mergedUsers = userCountsLib.collapseTotals(mergedUsers);
 
-        let overallCounts = overallCountsLib.mergeTotals(context.job.children);
-        overallCounts = overallCountsLib.collapseTotals(overallCounts);
+        let mergedOverall = overallCountsLib.mergeTotals(context.job.children);
+        mergedOverall = overallCountsLib.collapseTotals(mergedOverall);
 
         context.job.data = {
-            userCounts: userCounts,
-            overallCounts: overallCounts
+            userCounts: mergedUsers,
+            overallCounts: mergedOverall
         };
     }
 
     if (context.job.jobType === 'hour') {
-        // put totals into the appropriate position in an array
-            // use the sequence
-        // input: array of individual objects holding totals
-        // output: sparse array of totals
+        let overallArray = overallCountsLib.arrayMinuteTotals(context.job.children);
+        let userArray = userCountsLib.arrayMinuteTotals(context.job.children);
+
+        context.job.data = {
+            userCounts: userArray,
+            overallCounts: overallArray
+        };
     }
 
     delete context.job.children;
