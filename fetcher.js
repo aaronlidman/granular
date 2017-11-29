@@ -13,6 +13,8 @@ exports.handler = (event, context, callback) => {
         .then(parse.changes)
         .then(cwput.overallMetrics)
         .then(write.minutelyStats)
-        .then(queue.minuteAggregation)
+        .then(keys => {
+            queue.minuteAggregation(keys, true);
+        })
         .catch(callback);
 };
