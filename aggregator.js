@@ -9,10 +9,6 @@ const sqs = new AWS.SQS({region: region});
 const userCountsLib = require('./lib/userCounts');
 const overallCountsLib = require('./lib/overallCounts');
 
-module.exports = {};
-module.exports.getChildren = getChildren;
-module.exports.mergeChildren = mergeChildren;
-
 exports.handler = (event, context, callback) => {
     processNext(event, callback);
 };
