@@ -29,7 +29,6 @@ function processNext(context, callback) {
                 return callback(null);
             } else {
                 err.context = context;
-                console.error(err);
                 return callback(err);
             }
         });
@@ -55,8 +54,15 @@ function getJob(context) {
             if (err) return reject(err);
             if (!data.Messages) return reject({no_messages: true});
 
+            console.log('starting', data.Messages[0].Body);
             context.job = JSON.parse(data.Messages[0].Body);
             context.job.ReceiptHandle = data.Messages[0].ReceiptHandle;
+
+            // validate the key real quick, this should be a lib
+            if (context.job.jobType === 'minute') context.job.key = context.job.key.slice(0, 16);
+            if (context.job.jobType === 'hour') context.job.key = context.job.key.slice(0, 13);
+            if (context.job.jobType === 'day') context.job.key = context.job.key.slice(0, 10);
+            if (context.job.jobType === 'day') context.job.key = context.job.key.slice(0, 7);
 
             resolve(context);
         });
@@ -70,6 +76,8 @@ function markJobDone(context) {
             ReceiptHandle: context.job.ReceiptHandle
         }, (err, data) => {
             if (err) return reject(err);
+            delete context.job.data;
+            console.log('finished', JSON.stringify(context.job));
             delete context.job;
             resolve(context);
         });
@@ -130,8 +138,8 @@ function mergeChildren(context) {
     }
 
     if (context.job.jobType === 'hour') {
-        let overallArray = overallCountsLib.arrayMinuteTotals(context.job.children);
-        let userArray = userCountsLib.arrayMinuteTotals(context.job.children);
+        let overallArray = overallCountsLib.arrayTotals(context.job.children);
+        let userArray = userCountsLib.arrayTotals(context.job.children);
 
         context.job.data = {
             userCounts: userArray,
