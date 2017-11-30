@@ -22,13 +22,13 @@ function processNext(context, callback) {
         .then(markJobDone)
         .then(() => {
             processNext(context, callback);
-        })
-        .catch((err) => {
+        }).catch((err) => {
             if (err.no_messages) {
                 // retries or concurrency checks here in the future
                 return callback(null);
             } else {
                 err.context = context;
+                console.error(err.stack);
                 return callback(err);
             }
         });
@@ -62,7 +62,7 @@ function getJob(context) {
             if (context.job.jobType === 'minute') context.job.key = context.job.key.slice(0, 16);
             if (context.job.jobType === 'hour') context.job.key = context.job.key.slice(0, 13);
             if (context.job.jobType === 'day') context.job.key = context.job.key.slice(0, 10);
-            if (context.job.jobType === 'day') context.job.key = context.job.key.slice(0, 7);
+            if (context.job.jobType === 'month') context.job.key = context.job.key.slice(0, 7);
 
             resolve(context);
         });
@@ -146,6 +146,16 @@ function mergeChildren(context) {
             overallCounts: overallArray
         };
     }
+
+    if (context.job.jobType === 'day') {
+        let overallArray = overallCountsLib.mergeArrays('day', context.job.children);
+        // no users for day files until we figure out a better way of storing them
+
+        context.job.data = {
+            overallCounts: overallArray
+        };
+    }
+
 
     delete context.job.children;
     return Promise.resolve(context);
