@@ -327,7 +327,7 @@
                 "ContentBasedDeduplication": true,
                 "FifoQueue": true,
                 "MessageRetentionPeriod": 1209600,
-                "ReceiveMessageWaitTimeSeconds": 20
+                "ReceiveMessageWaitTimeSeconds": 0
             }
         },
         "perMinInvokePermissions": {

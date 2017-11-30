@@ -14,12 +14,12 @@ exports.handler = (event, context, callback) => {
 };
 
 function processNext(context, callback) {
-    getMessage(context)
+    getJob(context)
         .then(getChildren)
         .then(mergeChildren)
         .then(packageValues)
         .then(writeToDynamo)
-        .then(deleteMessage)
+        .then(markJobDone)
         .then(() => {
             processNext(context, callback);
         })
@@ -35,7 +35,7 @@ function processNext(context, callback) {
         });
 }
 
-function getMessage(context) {
+function getJob(context) {
     return new Promise((resolve, reject) => {
         if (context.source) {
             if (context.source === 'trigger.perTenMin') {
@@ -63,7 +63,7 @@ function getMessage(context) {
     });
 }
 
-function deleteMessage(context) {
+function markJobDone(context) {
     return new Promise((resolve, reject) => {
         sqs.deleteMessage({
             QueueUrl: context.queue,
