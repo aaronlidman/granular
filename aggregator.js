@@ -37,7 +37,7 @@ function processNext(context, callback) {
 function getJob(context) {
     return new Promise((resolve, reject) => {
         if (context.source) {
-            if (context.source === 'trigger.perTenMin') {
+            if (context.source === 'perTenMinTrigger') {
                 context.queue = process.env.perTenMinQueue;
             } else {
                 context.queue = process.env.perMinQueue;
