@@ -184,6 +184,9 @@
                         },
                         "perMinQueue": {
                             "Ref": "perMinQueue"
+                        },
+                        "perTenMinQueue": {
+                            "Ref": "perTenMinQueue"
                         }
                     }
                 }
