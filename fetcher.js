@@ -3,8 +3,10 @@
 const parse = require('./lib/parse.js');
 const request = require('./lib/request.js');
 const cwput = require('./lib/cwput.js');
-const queue = require('./lib/queue');
+const queue = require('./lib/queue.js');
 const write = require('./lib/write.js');
+const userCounts = require('./lib/userCounts.js');
+const overallCounts = require('./lib/overallCounts.js');
 
 exports.handler = (event, context, callback) => {
     request.get(process.env.ReplicationPath + 'minute/state.txt')
@@ -12,9 +14,11 @@ exports.handler = (event, context, callback) => {
         .then(request.changes)
         .then(parse.changes)
         .then(cwput.overallMetrics)
-        .then(write.minutelyStats)
+        .then(userCounts.toCSV)
+        .then(overallCounts.toCSV)
+        .then(write.fetcherStats)
         .then(keys => {
-            queue.minuteAggregation(keys, true);
+            queue.minuteAggregation(keys, false);
         })
         .catch(callback);
 };
