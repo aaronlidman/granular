@@ -18,18 +18,6 @@ test('queue.generic', t => {
         .catch(t.error);
 });
 
-test('queue.sequence', t => {
-    process.env.perMinQueue = 'hey';
-
-    queue.sequence('1553')
-        .then(result => {
-            t.equal(result.QueueUrl, process.env.perMinQueue, 'QueueUrl set by env var');
-            t.equal(result.MessageBody, '{"worker":"aggregator","jobType":"sequence","key":"1553"}', 'MessageBody is as expected');
-        })
-        .then(t.end)
-        .catch(t.error);
-});
-
 test('catch error', t => {
     queue.generic('idk')
         .then(t.error)
