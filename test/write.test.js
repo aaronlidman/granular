@@ -8,8 +8,8 @@ const write = require('../lib/write.js');
 
 test('minutelyStats', (t) => {
     AWS.mock('DynamoDB', 'updateItem', function (params, callback) {
-        var fileObj = JSON.parse(zlib.gunzipSync(params.ExpressionAttributeValues[':userCounts'].B));
-        t.deepEqual(fileObj, {test: {create_node: 22, modify_node: 17}}, 'file contents as expected');
+        var fileObj = zlib.gunzipSync(params.ExpressionAttributeValues[':userCounts'].B);
+        t.deepEqual(fileObj.toString(), 'test,22,17,0', 'file contents as expected');
 
         if (params.Key.parent.S === '2017-10-13T15:19' ||
             params.Key.parent.S === '2017-10-13T15:20') {
@@ -34,38 +34,38 @@ test('minutelyStats', (t) => {
     let promises = [];
 
     // plain old write
-    promises.push(write.minutelyStats({
+    promises.push(write.fetcherStats({
         stats: {
             '2017-10-13T15:20:00Z': {
-                'userCounts': {'test': {create_node: 22, modify_node: 17}},
-                'overallCounts': {create_node: 22, modify_node: 17}
+                'userCounts': 'test,22,17,0',
+                'overallCounts': '22,17,0'
             }
         },
         state: {sequenceNumber: '002669949'}
     }).then(t.ok).catch(t.error));
 
     // catch missing sequence
-    promises.push(write.minutelyStats({
+    promises.push(write.fetcherStats({
         stats: {
             '2017-10-13T15:20:00Z': {
-                'userCounts': {'test': {create_node: 22, modify_node: 17}},
-                'overallCounts': {create_node: 22, modify_node: 17}
+                'userCounts': 'test,22,17,0',
+                'overallCounts': '22,17,0'
             }
         },
     }).catch((err) => {
         t.equal(err, 'missing sequenceNumber', 'successfully errors on missing sequenceNumber');
     }));
 
-    // write multiple files
-    promises.push(write.minutelyStats({
+    //write multiple files
+    promises.push(write.fetcherStats({
         stats: {
             '2017-10-13T15:20:00Z': {
-                'userCounts': {'test': {create_node: 22, modify_node: 17}},
-                'overallCounts': {create_node: 22, modify_node: 17}
+                'userCounts': 'test,22,17,0',
+                'overallCounts': '22,17,0'
             },
             '2017-10-13T15:19:00Z': {
-                'userCounts': {'test': {create_node: 22, modify_node: 17}},
-                'overallCounts': {create_node: 22, modify_node: 17}
+                'userCounts': 'test,22,17,0',
+                'overallCounts': '22,17,0'
             }
         },
         state: {sequenceNumber: '002669949'}
