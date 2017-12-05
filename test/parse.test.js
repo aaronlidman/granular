@@ -37,15 +37,9 @@ test('parse change file', (t) => {
             t.true(result.stats['2017-10-13T15:21'].userCounts.mavl, 'random user is present');
             t.true(result.stats['2017-10-13T15:20'].userCounts['Chris McKay'], 'random user is present');
 
-            t.deepEqual(result.stats['2017-10-13T15:20'].userCounts.gloriaq, {create_node: 26, create_way: 26}, 'counts as expected');
-            t.deepEqual(result.stats['2017-10-13T15:20'].userCounts.vivekanandapai, {modify_node: 9, create_node: 228, modify_way: 12, create_way: 41},
-                'counts as expected');
-            t.deepEqual(result.stats['2017-10-13T15:20'].overallCounts,
-                {
-                    modify_node: 410, delete_node: 187, create_node: 2335, modify_way: 169, delete_way: 7,
-                    create_way: 282, modify_relation: 4, delete_relation: 8, create_relation: 5
-                },
-                'counts as expected');
+            t.deepEqual(result.stats['2017-10-13T15:20'].userCounts.gloriaq, {create_node: 26, create_way: 26, create_relation: 0, modify_node: 0, modify_way: 0, modify_relation: 0, delete_node: 0, delete_way: 0, delete_relation: 0}, 'counts as expected');
+            t.deepEqual(result.stats['2017-10-13T15:20'].userCounts.vivekanandapai, {create_node: 228, create_way: 41, create_relation: 0, modify_node: 9, modify_way: 12, modify_relation: 0, delete_node: 0, delete_way: 0, delete_relation: 0}, 'counts as expected');
+            t.deepEqual(result.stats['2017-10-13T15:20'].overallCounts, {modify_node: 410, delete_node: 187, create_node: 2335, modify_way: 169, delete_way: 7, create_way: 282, modify_relation: 4, delete_relation: 8, create_relation: 5}, 'counts as expected');
             t.deepEqual(Object.keys(result.stats), ['2017-10-13T15:20', '2017-10-13T15:21'], 'timestamps are as expected');
             t.equal(result.state, undefined, 'state is not present');
             t.end();
