@@ -55,9 +55,9 @@ test('userCounts', t => {
     });
 
     t.deepEqual(result, {stats: {
-        '2017-01-01T00:00:47': {userCounts: 'joey,90,4,20\n'},
-        time2: {userCounts: 'user 2,6,6,6\n'},
-        anytimeperiod: {userCounts: 'racer 5,1,0,0\n'}
+        '2017-01-01T00:00:47': {userCounts: '2017-01-01T00:00:47,joey,90,4,20\n'},
+        time2: {userCounts: 'time2,user 2,6,6,6\n'},
+        anytimeperiod: {userCounts: 'anytimeperiod,racer 5,1,0,0\n'}
     }});
 
     t.end();

@@ -49,9 +49,9 @@ test('overallCounts', t => {
     });
 
     t.deepEqual(result, {stats: {
-        '2017-01-01T00:00:47': {overallCounts: '90,4,20\n'},
-        'time2': {overallCounts: '6,6,6\n'},
-        'anytimeperiod': {overallCounts: '1,0,0\n'}}
+        '2017-01-01T00:00:47': {overallCounts: '2017-01-01T00:00:47,90,4,20\n'},
+        'time2': {overallCounts: 'time2,6,6,6\n'},
+        'anytimeperiod': {overallCounts: 'anytimeperiod,1,0,0\n'}}
     });
 
     t.end();
