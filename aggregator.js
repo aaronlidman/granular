@@ -1,13 +1,12 @@
 'use strict';
 
 const AWS = require('aws-sdk');
-const zlib = require('zlib');
 const region = process.env.AWS_REGION || 'us-west-2';
 const dynamo = new AWS.DynamoDB({region: region});
 const sqs = new AWS.SQS({region: region});
 
-const userCountsLib = require('./lib/userCounts');
-const overallCountsLib = require('./lib/overallCounts');
+const userCounts = require('./lib/userCounts.js');
+const overallCounts = require('./lib/overallCounts.js');
 
 exports.handler = (event, context, callback) => {
     processNext(event, callback);
@@ -16,8 +15,10 @@ exports.handler = (event, context, callback) => {
 function processNext(context, callback) {
     getJob(context)
         .then(getChildren)
-        .then(mergeChildren)
-        .then(packageValues)
+        .then(userCounts.merge)
+        .then(userCounts.pack)
+        .then(overallCounts.merge)
+        .then(overallCounts.pack)
         .then(writeToDynamo)
         .then(markJobDone)
         .then(() => {
@@ -76,8 +77,12 @@ function markJobDone(context) {
             ReceiptHandle: context.job.ReceiptHandle
         }, (err, data) => {
             if (err) return reject(err);
+
             delete context.job.data;
+            delete context.job.children;
+
             console.log('finished', JSON.stringify(context.job));
+
             delete context.job;
             resolve(context);
         });
@@ -117,66 +122,6 @@ function getChildren(context) {
             resolve(context);
         });
     });
-}
-
-function mergeChildren(context) {
-    // merges children into various formats for the given time period
-    // minutes contain scalar values
-    // everything else contains arrays, at various resolutions of minutely totals
-
-    if (context.job.jobType === 'minute') {
-        let mergedUsers = userCountsLib.mergeTotals(context.job.children);
-        mergedUsers = userCountsLib.collapseTotals(mergedUsers);
-
-        let mergedOverall = overallCountsLib.mergeTotals(context.job.children);
-        mergedOverall = overallCountsLib.collapseTotals(mergedOverall);
-
-        context.job.data = {
-            userCounts: mergedUsers,
-            overallCounts: mergedOverall
-        };
-    }
-
-    if (context.job.jobType === 'hour') {
-        let overallArray = overallCountsLib.arrayTotals(context.job.children);
-        let userArray = userCountsLib.arrayTotals(context.job.children);
-
-        context.job.data = {
-            userCounts: userArray,
-            overallCounts: overallArray
-        };
-    }
-
-    if (context.job.jobType === 'day') {
-        let overallArray = overallCountsLib.mergeArrays('day', context.job.children);
-        // no users for day files until we figure out a better way of storing them
-
-        context.job.data = {
-            overallCounts: overallArray
-        };
-    }
-
-
-    delete context.job.children;
-    return Promise.resolve(context);
-}
-
-function packageValues(context) {
-    // pack up data for dynamo
-
-    if (context.job.data.userCounts) {
-        context.job.data.userCounts = {
-            B: zlib.gzipSync(JSON.stringify(context.job.data.userCounts))
-        };
-    }
-
-    if (context.job.data.overallCounts) {
-        context.job.data.overallCounts = {
-            B: zlib.gzipSync(JSON.stringify(context.job.data.overallCounts))
-        };
-    }
-
-    return context;
 }
 
 function writeToDynamo(context) {
