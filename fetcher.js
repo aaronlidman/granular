@@ -18,7 +18,7 @@ exports.handler = (event, context, callback) => {
         .then(overallCounts.toCSV)
         .then(write.fetcherStats)
         .then(keys => {
-            queue.minuteAggregation(keys, false);
+            queue.minuteAggregation(keys, true);
         })
         .catch(callback);
 };
