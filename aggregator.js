@@ -49,8 +49,7 @@ function getJob(context) {
 
         sqs.receiveMessage({
             QueueUrl: context.queue,
-            VisibilityTimeout: 10,
-            WaitTimeSeconds: 20
+            VisibilityTimeout: 10
         }, (err, data) => {
             if (err) return reject(err);
             if (!data.Messages) return reject({no_messages: true});
