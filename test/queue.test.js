@@ -19,10 +19,10 @@ test('queue.generic', t => {
 });
 
 test('catch error', t => {
-    queue.generic('idk')
+    queue.generic()
         .then(t.error)
         .catch(err => {
-            t.equal(err.code, 'MissingRequiredParameter', 'surfaced error correctly');
+            t.ok(err, 'surfaced error');
         })
         .then(t.end);
 });
