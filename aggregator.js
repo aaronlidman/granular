@@ -28,8 +28,7 @@ function processNext(context, callback) {
                 // retries or concurrency checks here in the future
                 return callback(null);
             } else {
-                err.context = context;
-                console.error(err.stack);
+                console.error(err.stack, context);
                 return callback(err);
             }
         });
