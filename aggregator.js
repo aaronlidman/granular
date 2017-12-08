@@ -116,6 +116,7 @@ function getChildren(context) {
             }
         }, (err, data) => {
             if (err) return reject(err);
+            if (data.Items.length === 0) return reject(new Error('no children for ' + context.job.key));
             context.job.children = data.Items;
             resolve(context);
         });
