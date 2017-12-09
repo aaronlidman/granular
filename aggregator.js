@@ -100,7 +100,8 @@ function getChildren(context) {
         };
 
         if (context.job.jobType === 'minute' ||
-            context.job.jobType === 'hour') {
+            context.job.jobType === 'hour' ||
+            context.job.jobType === 'day') {
             projExpression.push('#USERCOUNTS');
             xprsnAttrNames['#USERCOUNTS'] = 'userCounts';
         }
