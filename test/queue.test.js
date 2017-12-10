@@ -25,6 +25,10 @@ AWS.mock('SQS', 'receiveMessage', (params, callback) => {
     }
 });
 
+AWS.mock('SQS', 'deleteMessage', (params, callback) => {
+    callback(null, params);
+});
+
 test('queue.sendMessage', t => {
     queue.sendMessage('idk', {'something': true})
         .then(result => {
@@ -35,7 +39,7 @@ test('queue.sendMessage', t => {
         .catch(t.error);
 });
 
-test('catch error', t => {
+test('queue.sendMessage catch error', t => {
     queue.sendMessage()
         .then(t.error)
         .catch(err => {
@@ -62,5 +66,12 @@ test('queue.getMessage no messages', t => {
         .catch((err) => {
             t.ok(err, 'surfaced error');
         })
+        .then(t.end);
+});
+
+test('queue.deleteMessage', t => {
+    queue.deleteMessage({QueueUrl: 'delete-message', ReceiptHandle: 'some-string'})
+        .then(t.ok)
+        .catch(t.error)
         .then(t.end);
 });
