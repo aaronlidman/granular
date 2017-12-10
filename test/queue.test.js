@@ -8,8 +8,8 @@ AWS.mock('SQS', 'sendMessage', (params, callback) => {
     callback(null, params);
 });
 
-test('queue.generic', t => {
-    queue.generic('idk', {'something': true})
+test('queue.putMessage', t => {
+    queue.putMessage('idk', {'something': true})
         .then(result => {
             t.equal(result.QueueUrl, 'idk', 'QueueUrl is set');
             t.equal(result.MessageBody, '{"something":true}', 'MessageBody is as expected');
@@ -19,7 +19,7 @@ test('queue.generic', t => {
 });
 
 test('catch error', t => {
-    queue.generic()
+    queue.putMessage()
         .then(t.error)
         .catch(err => {
             t.ok(err, 'surfaced error');
