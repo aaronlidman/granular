@@ -7,24 +7,20 @@ const zlib = require('zlib');
 const write = require('../lib/write.js');
 
 test('minutelyStats', (t) => {
-    AWS.mock('S3', 'putObject', function (params, callback) {
-        var fileObj = JSON.parse(zlib.gunzipSync(params.Body));
-        t.deepEqual(fileObj, {test: {cnode: 22, mnode: 17}}, 'file contents as expected');
+    AWS.mock('DynamoDB', 'updateItem', function (params, callback) {
+        var fileObj = zlib.gunzipSync(params.ExpressionAttributeValues[':userCounts'].B);
+        t.deepEqual(fileObj.toString(), 'test,22,17,0', 'file contents as expected');
 
-        if (params.Key === (
-            'stack/environment/raw-stats/2017-10-13T15:20-002669949.json.gz' ||
-            'stack/environment/raw-stats/2017-10-13T15:19-002669949.json.gz')) {
-            t.ok(params.Key, 'files written to the right place');
+        if (params.Key.parent.S === '2017-10-13T15:19' ||
+            params.Key.parent.S === '2017-10-13T15:20') {
+            t.ok(true);
         } else {
-            t.error();
+            t.error(params.Key.parent.S, 'key not expected');
         }
 
-        callback(null, params.Key);
-    });
+        t.equal(params.Key.sequence.N, '002669949');
 
-    AWS.mock('CloudWatch', 'putMetricData', function (params, callback) {
-        t.equal(params.MetricData[0].MetricName, 'files_written', 'files_written metric put');
-        callback(null, true);
+        callback(null, {});
     });
 
     process.env.AWS_ACCESS_KEY_ID = null;
@@ -33,42 +29,56 @@ test('minutelyStats', (t) => {
     process.env.Bucket = 'bucket';
     process.env.Environment = 'environment';
     process.env.OutputPrefix = 'stack/';
+    process.env.MainTable = 'maintableee';
 
     let promises = [];
 
     // plain old write
-    promises.push(write.minutelyStats({
-        stats: {'2017-10-13T15:20:00Z': {'test': {cnode: 22, mnode: 17}}},
+    promises.push(write.fetcherStats({
+        stats: {
+            '2017-10-13T15:20:00Z': {
+                'userCounts': 'test,22,17,0',
+                'overallCounts': '22,17,0'
+            }
+        },
         state: {sequenceNumber: '002669949'}
     }).then(t.ok).catch(t.error));
 
     // catch missing sequence
-    promises.push(write.minutelyStats({
-        stats: {'2017-10-13T15:20:00Z': {'test': {cnode: 22, mnode: 17}}},
+    promises.push(write.fetcherStats({
+        stats: {
+            '2017-10-13T15:20:00Z': {
+                'userCounts': 'test,22,17,0',
+                'overallCounts': '22,17,0'
+            }
+        },
     }).catch((err) => {
         t.equal(err, 'missing sequenceNumber', 'successfully errors on missing sequenceNumber');
     }));
 
-    // write multiple files
-    promises.push(write.minutelyStats({
+    //write multiple files
+    promises.push(write.fetcherStats({
         stats: {
-            '2017-10-13T15:20:00Z': {'test': {cnode: 22, mnode: 17}},
-            '2017-10-13T15:19:00Z': {'test': {cnode: 22, mnode: 17}}
+            '2017-10-13T15:20:00Z': {
+                'userCounts': 'test,22,17,0',
+                'overallCounts': '22,17,0'
+            },
+            '2017-10-13T15:19:00Z': {
+                'userCounts': 'test,22,17,0',
+                'overallCounts': '22,17,0'
+            }
         },
         state: {sequenceNumber: '002669949'}
     }).then((data) => {
         t.deepEqual(data,
-            [
-                'stack/environment/raw-stats/minutes/2017-10-13T15:20-002669949.json.gz',
-                'stack/environment/raw-stats/minutes/2017-10-13T15:19-002669949.json.gz'
-            ],
-            'successfully wrote multiple files');
+            ['2017-10-13T15:20', '2017-10-13T15:19'],
+            'successfully wrote 2 files');
     }).catch(t.error));
 
     Promise.all(promises)
-        .then(AWS.restore)
+        .then(() => AWS.restore())
         .then(t.end)
-        .catch((error) => {
+        .catch(error => {
             t.error(error);
             t.end();
         });

@@ -12,7 +12,7 @@ process.env.ReplicationPath = 'http://planet.osm.org/replication/';
 test('parse state file', (t) => {
     const stateFile = path.join(__dirname, './fixtures/state1.txt');
     parse.state(fs.readFileSync(stateFile).toString())
-        .then((result) => {
+        .then(result => {
             t.true(result.state, 'state property is present');
             t.true(result.state.changeUrl, 'changeUrl property is present');
 
@@ -32,21 +32,15 @@ test('parse change file', (t) => {
     const obj = {changes: readStream.pipe(zlib.createGunzip())};
 
     parse.changes(obj)
-        .then((result) => {
-            t.true(result.stats['2017-10-13T15:20:00Z']['_overall'], 'overall stats are present');
-            t.true(result.stats['2017-10-13T15:21:00Z'].mavl, 'random user is present');
-            t.true(result.stats['2017-10-13T15:20:00Z']['Chris McKay'], 'random user is present');
+        .then(result => {
+            t.true(result.stats['2017-10-13T15:20'].overallCounts, 'overall stats are present');
+            t.true(result.stats['2017-10-13T15:21'].userCounts.mavl, 'random user is present');
+            t.true(result.stats['2017-10-13T15:20'].userCounts['Chris McKay'], 'random user is present');
 
-            t.deepEqual(result.stats['2017-10-13T15:20:00Z'].gloriaq, {cnode: 26, cway: 26}, 'counts as expected');
-            t.deepEqual(result.stats['2017-10-13T15:20:00Z'].vivekanandapai, {mnode: 9, cnode: 228, mway: 12, cway: 41},
-                'counts as expected');
-            t.deepEqual(result.stats['2017-10-13T15:20:00Z']['_overall'],
-                {
-                    mnode: 410, dnode: 187, cnode: 2335, mway: 169, dway: 7,
-                    cway: 282, mrelation: 4, drelation: 8, crelation: 5
-                },
-                'counts as expected');
-            t.deepEqual(Object.keys(result.stats), ['2017-10-13T15:20:00Z', '2017-10-13T15:21:00Z'], 'timestamps are as expected');
+            t.deepEqual(result.stats['2017-10-13T15:20'].userCounts.gloriaq, {create_node: 26, create_way: 26, create_relation: 0, modify_node: 0, modify_way: 0, modify_relation: 0, delete_node: 0, delete_way: 0, delete_relation: 0}, 'counts as expected');
+            t.deepEqual(result.stats['2017-10-13T15:20'].userCounts.vivekanandapai, {create_node: 228, create_way: 41, create_relation: 0, modify_node: 9, modify_way: 12, modify_relation: 0, delete_node: 0, delete_way: 0, delete_relation: 0}, 'counts as expected');
+            t.deepEqual(result.stats['2017-10-13T15:20'].overallCounts, {modify_node: 410, delete_node: 187, create_node: 2335, modify_way: 169, delete_way: 7, create_way: 282, modify_relation: 4, delete_relation: 8, create_relation: 5}, 'counts as expected');
+            t.deepEqual(Object.keys(result.stats), ['2017-10-13T15:20', '2017-10-13T15:21'], 'timestamps are as expected');
             t.equal(result.state, undefined, 'state is not present');
             t.end();
         }).catch(t.error);
