@@ -3,8 +3,8 @@
 const AWS = require('aws-sdk');
 const region = process.env.AWS_REGION || 'us-west-2';
 const dynamo = new AWS.DynamoDB({region: region});
-const sqs = new AWS.SQS({region: region});
 
+const queue = require('./lib/queue.js');
 const userCounts = require('./lib/userCounts.js');
 const overallCounts = require('./lib/overallCounts.js');
 
@@ -25,7 +25,11 @@ function processNext(context, callback) {
             processNext(context, callback);
         }).catch((err) => {
             if (err.no_messages) {
+
+
                 // retries or concurrency checks here in the future
+
+
                 return callback(null);
             } else {
                 console.error(err.stack, context);
@@ -46,16 +50,15 @@ function getJob(context) {
             return reject(new Error('missing source'));
         }
 
-        sqs.receiveMessage({
+        queue.receiveMessage({
             QueueUrl: context.queue,
             VisibilityTimeout: 10
-        }, (err, data) => {
+        }).then((err, data) => {
             if (err) return reject(err);
-            if (!data.Messages) return reject({no_messages: true});
 
-            console.log('starting', data.Messages[0].Body);
-            context.job = JSON.parse(data.Messages[0].Body);
-            context.job.ReceiptHandle = data.Messages[0].ReceiptHandle;
+            console.log('starting', data.Body);
+            context.job = JSON.parse(data.Body);
+            context.job.ReceiptHandle = data.ReceiptHandle;
 
             // validate the key real quick, this should be a lib
             if (context.job.jobType === 'minute') context.job.key = context.job.key.slice(0, 16);
@@ -70,10 +73,10 @@ function getJob(context) {
 
 function markJobDone(context) {
     return new Promise((resolve, reject) => {
-        sqs.deleteMessage({
+        queue.deleteMessage({
             QueueUrl: context.queue,
             ReceiptHandle: context.job.ReceiptHandle
-        }, (err, data) => {
+        }.then((err, data) => {
             if (err) return reject(err);
 
             delete context.job.data;
@@ -83,7 +86,7 @@ function markJobDone(context) {
 
             delete context.job;
             resolve(context);
-        });
+        }));
     });
 }
 
