@@ -74,7 +74,10 @@ test('queue.getMessage no messages', t => {
 
 test('queue.deleteMessage', t => {
     queue.deleteMessage({QueueUrl: 'delete-message', ReceiptHandle: 'some-string'}, 'md5')
-        .then(t.ok)
+        .then(() => {
+            t.ok(true, 'message deleted');
+            t.true(queue.skipList.md5, 'message reminants listed in skipList');
+        })
         .catch(t.error)
         .then(t.end);
 });
