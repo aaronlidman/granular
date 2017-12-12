@@ -9,10 +9,11 @@ const userCounts = require('./lib/userCounts.js');
 const overallCounts = require('./lib/overallCounts.js');
 
 exports.handler = (event, context, callback) => {
-    processNext(event, callback);
+    event.callback = callback;
+    processNext(event);
 };
 
-function processNext(context, callback) {
+function processNext(context) {
     getMessage(context)
         .then(getChildren)
         .then(userCounts.merge)
@@ -21,21 +22,30 @@ function processNext(context, callback) {
         .then(overallCounts.pack)
         .then(writeToDynamo)
         .then(deleteMessage)
-        .then(() => {
-            processNext(context, callback);
-        }).catch((err) => {
-            if (err.no_messages) {
+        .then(resetContext)
+        .then(processNext)
+        .catch((err) => {
+            if (err.name === 'NoChildren') {
+                const hideParams = {
+                    QueueUrl: context.queue,
+                    ReceiptHandle: context.message.ReceiptHandle
+                };
 
-
-                // retries or concurrency checks here in the future
-
-
-                return callback(null);
+                queue.hideMessageForFive(hideParams)
+                    .then(() => resetContext(context))
+                    .then(processNext)
+                    .catch(err => errorAndExit(context, err));
+            } else if (err.name === 'NoMoMessages') {
+                context.callback(null);
             } else {
-                console.error(err.stack, context);
-                return callback(err);
+                return errorAndExit(context, err);
             }
         });
+}
+
+function errorAndExit(context, err) {
+    console.error(err.stack, context);
+    return context.callback(err);
 }
 
 function getMessage(context) {
@@ -78,15 +88,18 @@ function deleteMessage(context) {
         };
 
         queue.deleteMessage(params, context.message.MD5OfBody).then(() => {
-            delete context.message.data;
-            delete context.message.children;
-
-            console.log('finished', JSON.stringify(context.message));
-
-            delete context.message;
+            console.log('finished', JSON.stringify({
+                key: context.message.key,
+                jobType: context.message.jobType
+            }));
             resolve(context);
         }).catch(reject);
     });
+}
+
+function resetContext(context) {
+    delete context.message;
+    return Promise.resolve(context);
 }
 
 function getChildren(context) {
@@ -119,7 +132,11 @@ function getChildren(context) {
             }
         }, (err, data) => {
             if (err) return reject(err);
-            if (data.Items.length === 0) return reject(new Error('no children for ' + context.message.key));
+            if (data.Items.length === 0) {
+                const error = new Error('no children for ' + context.message.key);
+                error.name = 'NoChildren';
+                return reject(error);
+            }
             context.message.children = data.Items;
             resolve(context);
         });
