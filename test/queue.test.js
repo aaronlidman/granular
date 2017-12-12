@@ -15,7 +15,10 @@ AWS.mock('SQS', 'receiveMessage', (params, callback) => {
                 MessageId: 'messageid-123',
                 ReceiptHandle: 'receiptHandle-123',
                 MD5OfBody: 'md5-123',
-                Body: '{"worker":"aggregator","jobType":"day","key":"2017-12-10"}'
+                Body: '{"worker":"aggregator","jobType":"day","key":"2017-12-10"}',
+                Attributes: {
+                    SentTimestamp: parseInt(+new Date() / 1000)
+                }
             }]
         });
     }
@@ -70,7 +73,7 @@ test('queue.getMessage no messages', t => {
 });
 
 test('queue.deleteMessage', t => {
-    queue.deleteMessage({QueueUrl: 'delete-message', ReceiptHandle: 'some-string'})
+    queue.deleteMessage({QueueUrl: 'delete-message', ReceiptHandle: 'some-string'}, 'md5')
         .then(t.ok)
         .catch(t.error)
         .then(t.end);
