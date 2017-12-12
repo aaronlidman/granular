@@ -32,6 +32,11 @@ AWS.mock('SQS', 'deleteMessage', (params, callback) => {
     callback(null, params);
 });
 
+AWS.mock('SQS', 'changeMessageVisibility', (params, callback) => {
+    console.log('changeMessageVisibility');
+    callback(null, params);
+});
+
 test('queue.sendMessage', t => {
     queue.sendMessage('idk', {'something': true})
         .then(result => {
@@ -77,6 +82,15 @@ test('queue.deleteMessage', t => {
         .then(() => {
             t.ok(true, 'message deleted');
             t.true(queue.skipList.md5, 'message reminants listed in skipList');
+        })
+        .catch(t.error)
+        .then(t.end);
+});
+
+test('queue.hideMessageForFive', t => {
+    queue.hideMessageForFive({QueueUrl: 'delete-message', ReceiptHandle: 'some-string'})
+        .then(() => {
+            t.ok(true, 'message hidden');
         })
         .catch(t.error)
         .then(t.end);
