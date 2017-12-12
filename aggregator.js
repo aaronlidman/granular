@@ -42,9 +42,9 @@ function getMessage(context) {
     return new Promise((resolve, reject) => {
         if (context.source) {
             if (context.source === 'perTenMinTrigger') {
-                context.queue = process.env.perTenMinQueue;
+                context.queue = process.env.slowQueue;
             } else {
-                context.queue = process.env.perMinQueue;
+                context.queue = process.env.fastQueue;
             }
         } else {
             return reject(new Error('missing source'));
