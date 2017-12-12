@@ -53,9 +53,7 @@ function getMessage(context) {
         queue.receiveMessage({
             QueueUrl: context.queue,
             VisibilityTimeout: 10
-        }).then((err, data) => {
-            if (err) return reject(err);
-
+        }).then(data => {
             console.log('starting', data.Body);
             context.message = JSON.parse(data.Body);
             context.message.ReceiptHandle = data.ReceiptHandle;
@@ -68,7 +66,7 @@ function getMessage(context) {
             if (context.message.jobType === 'month') context.message.key = context.message.key.slice(0, 7);
 
             resolve(context);
-        });
+        }).catch(reject);
     });
 }
 
@@ -79,9 +77,7 @@ function deleteMessage(context) {
             ReceiptHandle: context.message.ReceiptHandle
         };
 
-        queue.deleteMessage(params, context.message.MD5OfBody).then((err, data) => {
-            if (err) return reject(err);
-
+        queue.deleteMessage(params, context.message.MD5OfBody).then(() => {
             delete context.message.data;
             delete context.message.children;
 
@@ -89,7 +85,7 @@ function deleteMessage(context) {
 
             delete context.message;
             resolve(context);
-        });
+        }).catch(reject);
     });
 }
 
