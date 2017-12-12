@@ -99,7 +99,7 @@
                             "Effect": "Allow",
                             "Resource": {
                                 "Fn::GetAtt": [
-                                    "perMinQueue",
+                                    "fastQueue",
                                     "Arn"
                                 ]
                             }
@@ -115,7 +115,7 @@
                             "Effect": "Allow",
                             "Resource": {
                                 "Fn::GetAtt": [
-                                    "perTenMinQueue",
+                                    "slowQueue",
                                     "Arn"
                                 ]
                             }
@@ -182,11 +182,11 @@
                         "MainTable": {
                             "Ref": "MainTable"
                         },
-                        "perMinQueue": {
-                            "Ref": "perMinQueue"
+                        "fastQueue": {
+                            "Ref": "fastQueue"
                         },
-                        "perTenMinQueue": {
-                            "Ref": "perTenMinQueue"
+                        "slowQueue": {
+                            "Ref": "slowQueue"
                         }
                     }
                 }
@@ -282,11 +282,11 @@
                         "MainTable": {
                             "Ref": "MainTable"
                         },
-                        "perMinQueue": {
-                            "Ref": "perMinQueue"
+                        "fastQueue": {
+                            "Ref": "fastQueue"
                         },
-                        "perTenMinQueue": {
-                            "Ref": "perTenMinQueue"
+                        "slowQueue": {
+                            "Ref": "slowQueue"
                         }
                     }
                 }
@@ -315,19 +315,15 @@
                 }
             }
         },
-        "perMinQueue": {
+        "fastQueue": {
             "Type": "AWS::SQS::Queue",
             "Properties": {
-                "ContentBasedDeduplication": true,
-                "FifoQueue": true,
                 "MessageRetentionPeriod": 1209600
             }
         },
-        "perTenMinQueue": {
+        "slowQueue": {
             "Type": "AWS::SQS::Queue",
             "Properties": {
-                "ContentBasedDeduplication": true,
-                "FifoQueue": true,
                 "MessageRetentionPeriod": 1209600
             }
         },
