@@ -5,6 +5,7 @@ const region = process.env.AWS_REGION || 'us-west-2';
 const dynamo = new AWS.DynamoDB({region: region});
 
 const queue = require('./lib/queue.js');
+const isotrunc = require('./lib/isotrunc.js');
 const userCounts = require('./lib/userCounts.js');
 const overallCounts = require('./lib/overallCounts.js');
 
@@ -27,13 +28,10 @@ function processNext(context) {
         .then(processNext)
         .catch(err => {
             if (err.name === 'NoChildren') {
-                const hideParams = {
+                queue.hideMessageForFive({
                     QueueUrl: context.queue,
                     ReceiptHandle: context.message.ReceiptHandle
-                };
-
-                queue.hideMessageForFive(hideParams)
-                    .then(() => resetContext(context))
+                }).then(() => resetContext(context))
                     .then(processNext)
                     .catch(err => errorAndExit(context, err));
             } else if (err.name === 'NoMoMessages') {
@@ -65,16 +63,11 @@ function getMessage(context) {
             VisibilityTimeout: 10
         }).then(data => {
             console.log('starting', data.Body);
+
             context.message = JSON.parse(data.Body);
             context.message.ReceiptHandle = data.ReceiptHandle;
             context.message.MD5OfBody = data.MD5OfBody;
-
-            // validate the key real quick, this should be a lib
-            if (context.message.jobType === 'minute') context.message.key = context.message.key.slice(0, 16);
-            if (context.message.jobType === 'hour') context.message.key = context.message.key.slice(0, 13);
-            if (context.message.jobType === 'day') context.message.key = context.message.key.slice(0, 10);
-            if (context.message.jobType === 'month') context.message.key = context.message.key.slice(0, 7);
-
+            context.message.key = isotrunc.to(context.message.key, context.message.jobType);
             resolve(context);
         }).catch(reject);
     });
@@ -90,6 +83,7 @@ function deleteMessage(context) {
                 key: context.message.key,
                 jobType: context.message.jobType
             }));
+
             resolve(context);
         }).catch(reject);
     });
