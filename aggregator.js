@@ -14,7 +14,8 @@ exports.handler = (event, context, callback) => {
 };
 
 function processNext(context) {
-    getMessage(context)
+    setContext(context)
+        .then(getMessage)
         .then(getChildren)
         .then(userCounts.merge)
         .then(userCounts.pack)
@@ -24,7 +25,7 @@ function processNext(context) {
         .then(deleteMessage)
         .then(resetContext)
         .then(processNext)
-        .catch((err) => {
+        .catch(err => {
             if (err.name === 'NoChildren') {
                 const hideParams = {
                     QueueUrl: context.queue,
@@ -48,18 +49,17 @@ function errorAndExit(context, err) {
     return context.callback(err);
 }
 
+function setContext(context) {
+    if (!context.source) return Promise.reject(new Error('missing source'));
+
+    context.queue = (context.source === 'tenMinTrigger') ?
+        process.env.slowQueue : process.env.fastQueue;
+
+    return Promise.resolve(context);
+}
+
 function getMessage(context) {
     return new Promise((resolve, reject) => {
-        if (context.source) {
-            if (context.source === 'perTenMinTrigger') {
-                context.queue = process.env.slowQueue;
-            } else {
-                context.queue = process.env.fastQueue;
-            }
-        } else {
-            return reject(new Error('missing source'));
-        }
-
         queue.receiveMessage({
             QueueUrl: context.queue,
             VisibilityTimeout: 10
@@ -82,12 +82,10 @@ function getMessage(context) {
 
 function deleteMessage(context) {
     return new Promise((resolve, reject) => {
-        const params = {
+        queue.deleteMessage({
             QueueUrl: context.queue,
             ReceiptHandle: context.message.ReceiptHandle
-        };
-
-        queue.deleteMessage(params, context.message.MD5OfBody).then(() => {
+        }, context.message.MD5OfBody).then(() => {
             console.log('finished', JSON.stringify({
                 key: context.message.key,
                 jobType: context.message.jobType
