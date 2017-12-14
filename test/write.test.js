@@ -89,8 +89,8 @@ test('write.aggregate', t => {
     };
 
     const data = {
-        something: zlib.gzipSync('here'),
-        somethingElse: zlib.gzipSync('here')
+        something: 'here',
+        somethingElse: 'here'
     };
 
     write.aggregate(key, data)
@@ -101,8 +101,8 @@ test('write.aggregate', t => {
                 UpdateExpression: 'SET #SOMETHING = :something, #SOMETHINGELSE = :somethingElse',
                 ExpressionAttributeNames: {'#SOMETHING': 'something', '#SOMETHINGELSE': 'somethingElse'},
                 ExpressionAttributeValues: {
-                    ':something': {B: data.something},
-                    ':somethingElse': {B: data.somethingElse}
+                    ':something': {B: zlib.gzipSync(data.something)},
+                    ':somethingElse': {B: zlib.gzipSync(data.somethingElse)}
                 }
             });
         })
