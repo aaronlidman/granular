@@ -6,8 +6,6 @@ const zlib = require('zlib');
 
 const write = require('../lib/write.js');
 
-process.env.MainTable = 'maintableee';
-
 test('write.fetcherStats', t => {
     AWS.mock('DynamoDB', 'updateItem', function (params, callback) {
         var fileObj = zlib.gunzipSync(params.ExpressionAttributeValues[':userCounts'].B);
@@ -82,6 +80,8 @@ test('write.aggregate', t => {
     AWS.mock('DynamoDB', 'updateItem', function (params, callback) {
         callback(null, params);
     });
+
+    process.env.MainTable = 'maintableee';
 
     const key = {
         parent: 'parent',
