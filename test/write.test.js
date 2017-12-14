@@ -6,7 +6,9 @@ const zlib = require('zlib');
 
 const write = require('../lib/write.js');
 
-test('minutelyStats', (t) => {
+process.env.MainTable = 'maintableee';
+
+test('write.fetcherStats', t => {
     AWS.mock('DynamoDB', 'updateItem', function (params, callback) {
         var fileObj = zlib.gunzipSync(params.ExpressionAttributeValues[':userCounts'].B);
         t.deepEqual(fileObj.toString(), 'test,22,17,0', 'file contents as expected');
@@ -22,14 +24,6 @@ test('minutelyStats', (t) => {
 
         callback(null, {});
     });
-
-    process.env.AWS_ACCESS_KEY_ID = null;
-    process.env.AWS_SECRET_ACCESS_KEY = null;
-
-    process.env.Bucket = 'bucket';
-    process.env.Environment = 'environment';
-    process.env.OutputPrefix = 'stack/';
-    process.env.MainTable = 'maintableee';
 
     let promises = [];
 
@@ -53,7 +47,7 @@ test('minutelyStats', (t) => {
             }
         },
     }).catch((err) => {
-        t.equal(err, 'missing sequenceNumber', 'successfully errors on missing sequenceNumber');
+        t.equal(err.message, 'missing sequenceNumber', 'successfully errors on missing sequenceNumber');
     }));
 
     //write multiple files
@@ -82,4 +76,36 @@ test('minutelyStats', (t) => {
             t.error(error);
             t.end();
         });
+});
+
+test('write.aggregate', t => {
+    AWS.mock('DynamoDB', 'updateItem', function (params, callback) {
+        callback(null, params);
+    });
+
+    const key = {
+        parent: 'parent',
+        sequence: '123'
+    };
+
+    const data = {
+        something: zlib.gzipSync('here'),
+        somethingElse: zlib.gzipSync('here')
+    };
+
+    write.aggregate(key, data)
+        .then(results => {
+            t.deepEqual(results, {
+                TableName: 'maintableee',
+                Key: {parent: {S: 'parent'}, sequence: {N: '123'}},
+                UpdateExpression: 'SET #SOMETHING = :something, #SOMETHINGELSE = :somethingElse',
+                ExpressionAttributeNames: {'#SOMETHING': 'something', '#SOMETHINGELSE': 'somethingElse'},
+                ExpressionAttributeValues: {
+                    ':something': {B: data.something},
+                    ':somethingElse': {B: data.somethingElse}
+                }
+            });
+        })
+        .catch(t.error)
+        .then(t.end);
 });

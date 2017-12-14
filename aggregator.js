@@ -5,6 +5,7 @@ const region = process.env.AWS_REGION || 'us-west-2';
 const dynamo = new AWS.DynamoDB({region: region});
 
 const queue = require('./lib/queue.js');
+const write = require('./lib/write.js');
 const isotrunc = require('./lib/isotrunc.js');
 const userCounts = require('./lib/userCounts.js');
 const overallCounts = require('./lib/overallCounts.js');
@@ -19,10 +20,8 @@ function processNext(context) {
         .then(getMessage)
         .then(getChildren)
         .then(userCounts.merge)
-        .then(userCounts.pack)
         .then(overallCounts.merge)
-        .then(overallCounts.pack)
-        .then(writeToDynamo)
+        .then(writeAggregate)
         .then(deleteMessage)
         .then(resetContext)
         .then(processNext)
@@ -135,41 +134,22 @@ function getChildren(context) {
     });
 }
 
-function writeToDynamo(context) {
-    // dynamically write all data
+function writeAggregate(context) {
+    const data = {
+        overallCounts: context.message.data.overallCounts,
+        userCounts: context.message.data.userCounts
+    };
+
+    // come up with a better way of modifying parent and sequence length
+    // negative slices feel sketch
+    const compositeKey = {
+        parent: context.message.key.slice(0, -3),
+        sequence: context.message.key.slice(-2)
+    };
 
     return new Promise((resolve, reject) => {
-        const attrs = [];
-        for (const attr in context.message.data) {
-            attrs.push(attr);
-        }
-
-        const attrNames = {};
-        const updateExpression = [];
-        const attrValues = {};
-
-        attrs.forEach(attr => {
-            const subName = '#' + attr.toUpperCase();
-            const subValue = ':' + attr;
-            attrNames[subName] = attr;
-            updateExpression.push(subName + ' = ' + subValue);
-            attrValues[subValue] = context.message.data[attr];
-        });
-
-        // come up with a better way of modifying parent and sequence length
-        // like actually using Date(), negative slices feel sketch
-        dynamo.updateItem({
-            TableName: process.env.MainTable,
-            Key: {
-                parent: {S: context.message.key.slice(0, -3)},
-                sequence: {N: context.message.key.slice(-2)}
-            },
-            UpdateExpression: 'SET ' + updateExpression.join(', '),
-            ExpressionAttributeNames: attrNames,
-            ExpressionAttributeValues: attrValues
-        }, (err, data) => {
-            if (err) return reject(err);
-            resolve(context);
-        });
+        write.aggregate(compositeKey, data)
+            .then(() => resolve(context))
+            .catch(reject);
     });
 }
