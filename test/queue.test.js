@@ -33,7 +33,6 @@ AWS.mock('SQS', 'deleteMessage', (params, callback) => {
 });
 
 AWS.mock('SQS', 'changeMessageVisibility', (params, callback) => {
-    console.log('changeMessageVisibility');
     callback(null, params);
 });
 
@@ -91,6 +90,93 @@ test('queue.hideMessageForFive', t => {
     queue.hideMessageForFive({QueueUrl: 'delete-message', ReceiptHandle: 'some-string'})
         .then(() => {
             t.ok(true, 'message hidden');
+        })
+        .catch(t.error)
+        .then(t.end);
+});
+
+test('queue.minuteAggregation', t => {
+    const keys = [
+        '2017-01-02T03:04:05.678Z',
+        '2017-01-02T03:04:06.678Z',
+        '2017-01-02T03:05:05.678Z',
+        '2017-01-02T08:04:05.678Z'
+    ];
+
+    process.env.fastQueue = 'something-fun';
+
+    queue.minuteAggregation(keys, false)
+        .then(results => {
+            const expected = [{
+                QueueUrl: 'something-fun',
+                MessageBody: '{"worker":"aggregator","jobType":"minute","key":"2017-01-02T03:04"}'
+            }, {
+                QueueUrl: 'something-fun',
+                MessageBody: '{"worker":"aggregator","jobType":"minute","key":"2017-01-02T03:04"}'
+            }, {
+                QueueUrl: 'something-fun',
+                MessageBody: '{"worker":"aggregator","jobType":"minute","key":"2017-01-02T03:05"}'
+            }, {
+                QueueUrl: 'something-fun',
+                MessageBody: '{"worker":"aggregator","jobType":"minute","key":"2017-01-02T08:04"}'
+            }];
+            t.deepEqual(results, expected);
+        })
+        .catch(t.error)
+        .then(t.end);
+});
+
+test('queue.minuteAggregation with propogation', t => {
+    const keys = [
+        '2017-01-02T03:04:05.678Z',
+        '2017-01-02T03:04:06.678Z',
+        '2017-01-02T03:05:05.678Z',
+        '2017-01-02T08:04:05.678Z'
+    ];
+
+    process.env.fastQueue = 'something-fun';
+    process.env.slowQueue = 'something-less-fun';
+
+    queue.minuteAggregation(keys, true)
+        .then(results => {
+            const expected = [{
+                QueueUrl: 'something-fun',
+                MessageBody: '{"worker":"aggregator","jobType":"minute","key":"2017-01-02T03:04"}'
+            },
+            {
+                QueueUrl: 'something-fun',
+                MessageBody: '{"worker":"aggregator","jobType":"minute","key":"2017-01-02T03:04"}'
+            },
+            {
+                QueueUrl: 'something-fun',
+                MessageBody: '{"worker":"aggregator","jobType":"minute","key":"2017-01-02T03:05"}'
+            },
+            {
+                QueueUrl: 'something-fun',
+                MessageBody: '{"worker":"aggregator","jobType":"minute","key":"2017-01-02T08:04"}'
+            },
+            [{
+                    QueueUrl: 'something-fun',
+                    MessageBody: '{"worker":"aggregator","jobType":"hour","key":"2017-01-02T03"}'
+                },
+                {
+                    QueueUrl: 'something-fun',
+                    MessageBody: '{"worker":"aggregator","jobType":"hour","key":"2017-01-02T08"}'
+                }
+            ],
+            [{
+                QueueUrl: 'something-less-fun',
+                MessageBody: '{"worker":"aggregator","jobType":"day","key":"2017-01-02"}'
+            }]
+            ];
+
+            // this output isn't the prettiest but doesn't especially matter
+            // it's only an indication of things actually happening
+
+            // a better way would be to actually access the results from the queue
+            // until then, this will do
+
+            t.deepEqual(results, expected);
         })
         .catch(t.error)
         .then(t.end);

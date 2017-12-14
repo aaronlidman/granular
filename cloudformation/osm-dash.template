@@ -327,7 +327,7 @@
                 "MessageRetentionPeriod": 1209600
             }
         },
-        "perMinInvokePermissions": {
+        "minInvokePermissions": {
             "Type": "AWS::Lambda::Permission",
             "Properties": {
                 "Action": "lambda:InvokeFunction",
@@ -340,20 +340,20 @@
                 "Principal": "events.amazonaws.com",
                 "SourceArn": {
                     "Fn::GetAtt": [
-                        "perMinAggregatorTrigger",
+                        "minAggregatorTrigger",
                         "Arn"
                     ]
                 }
             }
         },
-        "perMinAggregatorTrigger": {
+        "minAggregatorTrigger": {
             "Type": "AWS::Events::Rule",
             "Properties": {
                 "ScheduleExpression": "rate(1 minute)",
                 "State": "ENABLED",
                 "Targets": [{
                     "Id": "AggregatorLambda",
-                    "Input": "{\"source\":\"perMinTrigger\"}",
+                    "Input": "{\"source\":\"minTrigger\"}",
                     "Arn": {
                         "Fn::GetAtt": [
                             "AggregatorLambda",
@@ -363,7 +363,7 @@
                 }]
             }
         },
-        "perTenMinInvokePermissions": {
+        "tenMinInvokePermissions": {
             "Type": "AWS::Lambda::Permission",
             "Properties": {
                 "Action": "lambda:InvokeFunction",
@@ -376,20 +376,20 @@
                 "Principal": "events.amazonaws.com",
                 "SourceArn": {
                     "Fn::GetAtt": [
-                        "perTenMinAggregatorTrigger",
+                        "tenMinAggregatorTrigger",
                         "Arn"
                     ]
                 }
             }
         },
-        "perTenMinAggregatorTrigger": {
+        "tenMinAggregatorTrigger": {
             "Type": "AWS::Events::Rule",
             "Properties": {
                 "ScheduleExpression": "rate(10 minutes)",
                 "State": "ENABLED",
                 "Targets": [{
                     "Id": "AggregatorLambda",
-                    "Input": "{\"source\":\"perTenMinTrigger\"}",
+                    "Input": "{\"source\":\"tenMinTrigger\"}",
                     "Arn": {
                         "Fn::GetAtt": [
                             "AggregatorLambda",
