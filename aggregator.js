@@ -1,11 +1,8 @@
 'use strict';
 
-const AWS = require('aws-sdk');
-const region = process.env.AWS_REGION || 'us-west-2';
-const dynamo = new AWS.DynamoDB({region: region});
-
 const queue = require('./lib/queue.js');
 const write = require('./lib/write.js');
+const request = require('./lib/request.js');
 const isotrunc = require('./lib/isotrunc.js');
 const userCounts = require('./lib/userCounts.js');
 const overallCounts = require('./lib/overallCounts.js');
@@ -62,7 +59,6 @@ function getMessage(context) {
             VisibilityTimeout: 10
         }).then(data => {
             console.log('starting', data.Body);
-
             context.message = JSON.parse(data.Body);
             context.message.ReceiptHandle = data.ReceiptHandle;
             context.message.MD5OfBody = data.MD5OfBody;
@@ -94,43 +90,14 @@ function resetContext(context) {
 }
 
 function getChildren(context) {
-    // get all the children for the given parent
-
     return new Promise((resolve, reject) => {
-        // all jobs want these things for now, that might change
-        const projExpression = ['#SEQUENCE', '#OVERALLCOUNTS'];
-        const xprsnAttrNames = {
-            '#PARENT': 'parent',
-            '#OVERALLCOUNTS': 'overallCounts',
-            '#SEQUENCE': 'sequence'
-        };
-
-        if (context.message.jobType === 'minute' ||
-            context.message.jobType === 'hour' ||
-            context.message.jobType === 'day') {
-            projExpression.push('#USERCOUNTS');
-            xprsnAttrNames['#USERCOUNTS'] = 'userCounts';
-        }
-
-        dynamo.query({
-            TableName: process.env.MainTable,
-            Select: 'SPECIFIC_ATTRIBUTES',
-            KeyConditionExpression: '#PARENT = :parent',
-            ProjectionExpression: projExpression.join(', '),
-            ExpressionAttributeNames: xprsnAttrNames,
-            ExpressionAttributeValues: {
-                ':parent': {S: context.message.key}
-            }
-        }, (err, data) => {
-            if (err) return reject(err);
-            if (data.Items.length === 0) {
-                const error = new Error('no children for ' + context.message.key);
-                error.name = 'NoChildren';
-                return reject(error);
-            }
-            context.message.children = data.Items;
-            resolve(context);
-        });
+        request.children(context.message.key)
+            .then(children => {
+                context.message.children = children;
+                return context;
+            })
+            .then(resolve)
+            .catch(reject);
     });
 }
 
@@ -140,7 +107,6 @@ function writeAggregate(context) {
         userCounts: context.message.data.userCounts
     };
 
-    // come up with a better way of modifying parent and sequence length
     // negative slices feel sketch
     const compositeKey = {
         parent: context.message.key.slice(0, -3),
