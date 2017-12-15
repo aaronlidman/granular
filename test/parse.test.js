@@ -29,15 +29,14 @@ test('parse state file', (t) => {
 test('parse change file', (t) => {
     const changeFile = path.join(__dirname, './fixtures/change1.osc.gz');
     const readStream = fs.createReadStream(changeFile);
-    const obj = {changes: readStream.pipe(zlib.createGunzip())};
 
-    parse.changes(obj)
-        .then(result => {
-            t.true(result.stats['2017-10-13T15:20'].overallCounts, 'overall stats are present');
-            t.true(result.stats['2017-10-13T15:21'].userCounts.mavl, 'random user is present');
-            t.true(result.stats['2017-10-13T15:20'].userCounts['Chris McKay'], 'random user is present');
+    parse.changes(readStream.pipe(zlib.createGunzip()))
+        .then(stats => {
+            t.true(stats['2017-10-13T15:20'].overallCounts, 'overall stats are present');
+            t.true(stats['2017-10-13T15:21'].userCounts.mavl, 'random user is present');
+            t.true(stats['2017-10-13T15:20'].userCounts['Chris McKay'], 'random user is present');
 
-            t.deepEqual(result.stats['2017-10-13T15:20'].userCounts.gloriaq, {
+            t.deepEqual(stats['2017-10-13T15:20'].userCounts.gloriaq, {
                 create_node: 26,
                 create_way: 26,
                 create_relation: 0,
@@ -49,7 +48,7 @@ test('parse change file', (t) => {
                 delete_relation: 0
             }, 'counts as expected');
 
-            t.deepEqual(result.stats['2017-10-13T15:20'].userCounts.vivekanandapai, {
+            t.deepEqual(stats['2017-10-13T15:20'].userCounts.vivekanandapai, {
                 create_node: 228,
                 create_way: 41,
                 create_relation: 0,
@@ -61,7 +60,7 @@ test('parse change file', (t) => {
                 delete_relation: 0
             }, 'counts as expected');
 
-            t.deepEqual(result.stats['2017-10-13T15:20'].overallCounts, {modify_node: 410,
+            t.deepEqual(stats['2017-10-13T15:20'].overallCounts, {modify_node: 410,
                 delete_node: 187,
                 create_node: 2335,
                 modify_way: 169,
@@ -72,8 +71,7 @@ test('parse change file', (t) => {
                 create_relation: 5
             }, 'counts as expected');
 
-            t.deepEqual(Object.keys(result.stats), ['2017-10-13T15:20', '2017-10-13T15:21'], 'timestamps are as expected');
-            t.equal(result.state, undefined, 'state is not present');
+            t.deepEqual(Object.keys(stats), ['2017-10-13T15:20', '2017-10-13T15:21'], 'timestamps are as expected');
             t.end();
         }).catch(t.error);
 });

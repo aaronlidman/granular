@@ -26,46 +26,44 @@ test('write.fetcherStats', t => {
     let promises = [];
 
     // plain old write
-    promises.push(write.fetcherStats({
-        stats: {
-            '2017-10-13T15:20:00Z': {
-                'userCounts': 'test,22,17,0',
-                'overallCounts': '22,17,0'
-            }
-        },
-        state: {sequenceNumber: '002669949'}
-    }).then(t.ok).catch(t.error));
+    const sequence = '002669949';
+    let stats = {
+        '2017-10-13T15:20:00Z': {
+            'userCounts': 'test,22,17,0',
+            'overallCounts': '22,17,0'
+        }
+    };
+    promises.push(write.fetcherStats(sequence, stats)
+        .then(t.ok)
+        .catch(t.error));
 
     // catch missing sequence
-    promises.push(write.fetcherStats({
-        stats: {
-            '2017-10-13T15:20:00Z': {
-                'userCounts': 'test,22,17,0',
-                'overallCounts': '22,17,0'
-            }
-        },
-    }).catch((err) => {
+    stats = {
+        '2017-10-13T15:20:00Z': {
+            'userCounts': 'test,22,17,0',
+            'overallCounts': '22,17,0'
+        }
+    };
+    promises.push(write.fetcherStats(undefined, stats).catch((err) => {
         t.equal(err.message, 'missing sequenceNumber', 'successfully errors on missing sequenceNumber');
     }));
 
     //write multiple files
-    promises.push(write.fetcherStats({
-        stats: {
-            '2017-10-13T15:20:00Z': {
-                'userCounts': 'test,22,17,0',
-                'overallCounts': '22,17,0'
-            },
-            '2017-10-13T15:19:00Z': {
-                'userCounts': 'test,22,17,0',
-                'overallCounts': '22,17,0'
-            }
+    stats = {
+        '2017-10-13T15:20:00Z': {
+            'userCounts': 'test,22,17,0',
+            'overallCounts': '22,17,0'
         },
-        state: {sequenceNumber: '002669949'}
-    }).then((data) => {
-        t.deepEqual(data,
-            ['2017-10-13T15:20', '2017-10-13T15:19'],
-            'successfully wrote 2 files');
-    }).catch(t.error));
+        '2017-10-13T15:19:00Z': {
+            'userCounts': 'test,22,17,0',
+            'overallCounts': '22,17,0'
+        }
+    };
+    promises.push(write.fetcherStats('002669949', stats)
+        .then(data => {
+            t.deepEqual(data, ['2017-10-13T15:20', '2017-10-13T15:19'], 'successfully wrote 2 files');
+        })
+        .catch(t.error));
 
     Promise.all(promises)
         .then(() => AWS.restore())
