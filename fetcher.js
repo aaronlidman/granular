@@ -19,7 +19,7 @@ exports.handler = (event, context, callback) => {
         .then(convertOverallCounts)
         .then(context => write.fetcherStats(context.state.sequenceNumber, context.stats))
         .then(keys => queue.minuteAggregation(keys, true))
-        .then(callback)
+        .then(() => callback(null, null))
         .catch(callback);
 };
 
