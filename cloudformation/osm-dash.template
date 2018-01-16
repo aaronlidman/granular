@@ -234,6 +234,24 @@
                 }
             }
         },
+        "ApiStage":{
+            "Type":"AWS::ApiGateway::Stage",
+            "Properties":{
+                "DeploymentId":"DeploymentId",
+                "RestApiId":{
+                    "Fn::Join":[
+                        "",
+                        [
+                            "api-granular-",
+                            {
+                                "Ref":"Environment"
+                            }
+                        ]
+                    ]
+                },
+                "StageName":"production"
+            }
+        },
         "ApiLambda":{
             "Type":"AWS::Lambda::Function",
             "Properties":{
