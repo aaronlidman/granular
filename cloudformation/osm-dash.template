@@ -200,16 +200,27 @@
                                         "description":"200 response"
                                     }
                                 },
-                                "x-amazon-apigateway-integration":{
-                                    "responses":{
-                                        ".*":{
-                                            "statusCode":"200"
-                                        }
-                                    },
-                                    "uri":"arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:732737962182:function:apiGatewayTest/invocations",
-                                    "passthroughBehavior":"when_no_match",
-                                    "httpMethod":"POST",
-                                    "type":"aws_proxy"
+                                "x-amazon-apigateway-integration": {
+                                  "responses": {
+                                    "default": {
+                                      "statusCode": "200"
+                                    }
+                                  },
+                                "uri": {
+                    "Fn::Join":[
+                        "",
+                        [
+                            "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/",
+                            {
+                                "Ref":"ApiLambda"
+                            },
+                            ":function:apiGatewayTest/invocations"
+                        ]
+                    ]
+                },
+                                  "passthroughBehavior": "when_no_match",
+                                  "httpMethod": "POST",
+                                  "type": "aws_proxy"
                                 }
                             }
                         }
@@ -232,13 +243,27 @@
                         "REGIONAL"
                     ]
                 }
-            }
+            },
+            "DependsOn": "ApiLambda"
+        },
+        "ApiDeployment":{
+            "Type":"AWS::ApiGateway::Deployment",
+            "Properties":{
+                "RestApiId":{
+                    "Ref":"API"
+                }
+            },
+            "DependsOn":"API"
         },
         "ApiStage":{
             "Type":"AWS::ApiGateway::Stage",
             "Properties":{
-                "DeploymentId":"DeploymentId",
-                "RestApiId":{"Ref": "API"},
+                "DeploymentId":{
+                    "Ref":"ApiDeployment"
+                },
+                "RestApiId":{
+                    "Ref":"API"
+                },
                 "StageName":"production"
             }
         },
