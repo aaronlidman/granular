@@ -194,7 +194,7 @@
                     ],
                     "paths":{
                         "/":{
-                            "x-amazon-apigateway-get-method":{
+                            "get":{
                                 "responses":{
                                     "200":{
                                         "description":"200 response"
@@ -216,9 +216,12 @@
                                                 },
                                                 ":lambda:path/2015-03-31/functions/",
                                                 {
-                                                    "Ref":"ApiLambda"
+                                                    "Fn::GetAtt":[
+                                                        "ApiLambda",
+                                                        "Arn"
+                                                    ]
                                                 },
-                                                ":function:apiGatewayTest/invocations"
+                                                "/invocations"
                                             ]
                                         ]
                                     },
@@ -360,7 +363,7 @@
                             {
                                 "Ref":"API"
                             },
-                            "/*/GET/*/*"
+                            "/*/GET/"
                         ]
                     ]
                 }
@@ -677,6 +680,23 @@
                             "Ref":"GitSha"
                         },
                         ".zip"
+                    ]
+                ]
+            }
+        },
+        "GatewayLocation":{
+            "Value": {
+                "Fn::Join":[
+                    "",
+                    [
+                        "arn:aws:apigateway:",
+                        {
+                            "Ref":"AWS::Region"
+                        },
+                        ":lambda:path/2015-03-31/functions/",
+                        {
+                            "Ref":"ApiLambda"
+                        }
                     ]
                 ]
             }
