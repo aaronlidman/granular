@@ -6,9 +6,7 @@ const isotrunc = require('../lib/isotrunc.js');
 const timeFixtures = {
     '2018': {
         'to': {
-            'year': '2018',
-            'month': undefined,
-            'day': undefined
+            'year': '2018'
         },
         'unit': 'year',
         'parent': '2018',
@@ -17,8 +15,7 @@ const timeFixtures = {
     '2018-10': {
         'to': {
             'year': '2018',
-            'month': '2018-10',
-            'day': undefined
+            'month': '2018-10'
         },
         'unit': 'month',
         'parent': '2018',
@@ -28,8 +25,7 @@ const timeFixtures = {
         'to': {
             'year': '2018',
             'month': '2018-10',
-            'day': '2018-10-20',
-            'hour': undefined
+            'day': '2018-10-20'
         },
         'unit': 'day',
         'parent': '2018-10',
@@ -40,8 +36,7 @@ const timeFixtures = {
             'year': '2018',
             'month': '2018-10',
             'day': '2018-10-20',
-            'hour': '2018-10-20T12',
-            'minute': undefined
+            'hour': '2018-10-20T12'
         },
         'unit': 'hour',
         'parent': '2018-10-20',
@@ -85,10 +80,20 @@ const timeFixtures = {
     }
 };
 
+test('throw error on no input', t => {
+    try {
+        isotrunc();
+    } catch (e) {
+        t.equal(e.message, 'Must specify an ISOString to truncate');
+    }
+
+    t.end();
+});
+
 test('isotrunc.to', t => {
     for (const fixture in timeFixtures) {
         for (const unit in timeFixtures[fixture].to) {
-            t.equal(isotrunc.to(fixture, unit), timeFixtures[fixture].to[unit], fixture + ' to ' + unit);
+            t.equal(isotrunc(fixture).to(unit), timeFixtures[fixture].to[unit], fixture + ' to ' + unit);
         }
     }
     t.end();
@@ -96,30 +101,30 @@ test('isotrunc.to', t => {
 
 test('isotrunc.unit', t => {
     for (const fixture in timeFixtures) {
-        t.equal(isotrunc.unit(fixture), timeFixtures[fixture].unit, fixture + ' unit');
+        t.equal(isotrunc(fixture).unit(), timeFixtures[fixture].unit, fixture + ' unit');
     }
     t.end();
 });
 
 test('isotrunc.parent', t => {
     for (const fixture in timeFixtures) {
-        t.equal(isotrunc.parent(fixture), timeFixtures[fixture].parent, fixture + ' parent');
+        t.equal(isotrunc(fixture).parent(), timeFixtures[fixture].parent, fixture + ' parent');
     }
     t.end();
 });
 
 test('isotrunc.sequence', t => {
     for (const fixture in timeFixtures) {
-        t.equal(isotrunc.sequence(fixture), timeFixtures[fixture].sequence, fixture + ' sequence');
+        t.equal(isotrunc(fixture).sequence(), timeFixtures[fixture].sequence, fixture + ' sequence');
     }
     t.end();
 });
 
 test('isotrunc.parts', t => {
     for (const fixture in timeFixtures) {
-        t.deepEqual(isotrunc.parts(fixture), {
-            parent: isotrunc.parent(fixture),
-            sequence: isotrunc.sequence(fixture)
+        t.deepEqual(isotrunc(fixture).parts(), {
+            parent: isotrunc(fixture).parent(),
+            sequence: isotrunc(fixture).sequence()
         }, fixture + ' parts');
     }
     t.end();
