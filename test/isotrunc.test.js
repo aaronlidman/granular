@@ -3,7 +3,7 @@
 const test = require('tape');
 const isotrunc = require('../lib/isotrunc.js');
 
-const timeFixtures = {
+const fixtures = {
     '2018': {
         'to': {
             'year': '2018'
@@ -91,37 +91,37 @@ test('throw error on no input', t => {
 });
 
 test('isotrunc.to', t => {
-    for (const fixture in timeFixtures) {
-        for (const unit in timeFixtures[fixture].to) {
-            t.equal(isotrunc(fixture).to(unit), timeFixtures[fixture].to[unit], fixture + ' to ' + unit);
+    for (const fixture in fixtures) {
+        for (const unit in fixtures[fixture].to) {
+            t.equal(isotrunc(fixture).to(unit), fixtures[fixture].to[unit], fixture + ' to ' + unit);
         }
     }
     t.end();
 });
 
 test('isotrunc.unit', t => {
-    for (const fixture in timeFixtures) {
-        t.equal(isotrunc(fixture).unit(), timeFixtures[fixture].unit, fixture + ' unit');
+    for (const fixture in fixtures) {
+        t.equal(isotrunc(fixture).unit(), fixtures[fixture].unit, fixture + ' unit');
     }
     t.end();
 });
 
 test('isotrunc.parent', t => {
-    for (const fixture in timeFixtures) {
-        t.equal(isotrunc(fixture).parent(), timeFixtures[fixture].parent, fixture + ' parent');
+    for (const fixture in fixtures) {
+        t.equal(isotrunc(fixture).parent(), fixtures[fixture].parent, fixture + ' parent');
     }
     t.end();
 });
 
 test('isotrunc.sequence', t => {
-    for (const fixture in timeFixtures) {
-        t.equal(isotrunc(fixture).sequence(), timeFixtures[fixture].sequence, fixture + ' sequence');
+    for (const fixture in fixtures) {
+        t.equal(isotrunc(fixture).sequence(), fixtures[fixture].sequence, fixture + ' sequence');
     }
     t.end();
 });
 
 test('isotrunc.parts', t => {
-    for (const fixture in timeFixtures) {
+    for (const fixture in fixtures) {
         t.deepEqual(isotrunc(fixture).parts(), {
             parent: isotrunc(fixture).parent(),
             sequence: isotrunc(fixture).sequence()
