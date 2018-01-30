@@ -23,7 +23,7 @@ exports.handler = (event, context, callback) => {
 
     // convert a timestamp into parent and sequence
     time = time.slice(0, 16);
-    response.body = JSON.stringify(isotrunc.parts(time));
+    response.body = JSON.stringify(isotrunc(time).parts());
 
     callback(null, response);
 };
