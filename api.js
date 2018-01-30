@@ -12,9 +12,9 @@ exports.handler = (event, context, callback) => {
         isBase64Encoded: false
     };
 
-    // no paths or methods, just all GETs through the querystring
+    // no paths or methods, just all GETs and querystrings
 
-    let time = event.queryStringParameters.time;
+    let time = (event.queryStringParameters || {}).time;
 
     if (!time) {
         response.statusCode = 400;
