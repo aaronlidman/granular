@@ -1,6 +1,7 @@
 'use strict';
 
 const isotrunc = require('./lib/isotrunc');
+const request = require('./lib/request');
 
 exports.handler = (event, context, callback) => {
     console.log('event', event);
@@ -15,15 +16,24 @@ exports.handler = (event, context, callback) => {
     // no paths or methods, just all GETs and querystrings
 
     let time = (event.queryStringParameters || {}).time;
+    if (!time) return callback(errorOut(response, 'must specify a time, eg ?time=2018-01-01T01:01'));
 
-    if (!time) {
-        response.statusCode = 400;
-        return callback(null, response);
-    }
+    if (time.length > 16) time = time.slice(0, 16);
+    const parts = isotrunc(time).parts();
 
-    // convert a timestamp into parent and sequence
-    time = time.slice(0, 16);
-    response.body = JSON.stringify(isotrunc(time).parts());
-
-    callback(null, response);
+    request.countItems(parts.parent, parts.sequence)
+        .then(result => {
+            // stream this eventually
+            response.body = JSON.stringify(result);
+            return callback(null, response);
+        })
+        .catch(err => {
+            return callback(errorOut(response, err));
+        });
 };
+
+function errorOut(response, message) {
+    response.statusCode = 400;
+    response.body = message;
+    return response;
+}
