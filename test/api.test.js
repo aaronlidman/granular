@@ -6,13 +6,13 @@ const AWS = require('aws-sdk-mock');
 
 test('400 response', t => {
     api.handler({}, {}, (error, response) => {
-        t.deepEqual(error, {
+        t.equal(error, null);
+        t.deepEqual(response, {
             statusCode: 400,
             headers: {},
             isBase64Encoded: false,
             body: 'must specify a time, eg ?time=2018-01-01T01:01'
         });
-        t.equal(response, undefined);
         t.end();
     });
 });
@@ -54,7 +54,7 @@ test('fetch and return item', t => {
     });
 });
 
-test('fetch and return item', t => {
+test('fetch and return with no item', t => {
     AWS.mock('DynamoDB', 'query', function (params, callback) {
         const data = {Items: []};
         callback(null, data);

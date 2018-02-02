@@ -16,7 +16,7 @@ exports.handler = (event, context, callback) => {
     // no paths or methods, just all GETs and querystrings
 
     let time = (event.queryStringParameters || {}).time;
-    if (!time) return callback(errorOut(response, 'must specify a time, eg ?time=2018-01-01T01:01'));
+    if (!time) return callback(null, errorOut(response, 'must specify a time, eg ?time=2018-01-01T01:01'));
 
     if (time.length > 16) time = time.slice(0, 16);
     const parts = isotrunc(time).parts();
