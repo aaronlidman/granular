@@ -17,7 +17,7 @@ test('400 response', t => {
     });
 });
 
-test('200 response', t => {
+test('fetch and return item', t => {
     AWS.mock('DynamoDB', 'query', function (params, callback) {
         const data = {Items: []};
 
@@ -52,5 +52,34 @@ test('200 response', t => {
         AWS.restore('DynamoDB');
         t.end();
     });
+});
 
+test('fetch and return item', t => {
+    AWS.mock('DynamoDB', 'query', function (params, callback) {
+        const data = {Items: []};
+        callback(null, data);
+    });
+
+    const time = new Date('2020-02-11T12:10').toISOString();
+
+    const event = {
+        queryStringParameters: {
+            time: time
+        }
+    };
+
+    process.env.MainTable = 'MainTable';
+
+    api.handler(event, {}, (error, response) => {
+        t.equal(error, null);
+        t.deepEqual(response, {
+            statusCode: 200,
+            headers: {},
+            isBase64Encoded: false,
+            body: '[]'
+        });
+
+        AWS.restore('DynamoDB');
+        t.end();
+    });
 });
