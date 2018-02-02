@@ -91,7 +91,7 @@ function resetContext(context) {
 
 function getChildren(context) {
     return new Promise((resolve, reject) => {
-        request.children(context.message.key)
+        request.countItems(context.message.key)
             .then(children => {
                 context.message.children = children;
                 return context;
