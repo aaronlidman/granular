@@ -258,21 +258,18 @@
             "Properties":{
                 "RestApiId":{
                     "Ref":"API"
+                },
+                "StageDescription":{
+                    "Description":{
+                        "Ref":"GitSha"
+                    },
+                    "MetricsEnabled":"true"
+                },
+                "StageName":{
+                    "Ref":"Environment"
                 }
             },
             "DependsOn":"API"
-        },
-        "ApiStage":{
-            "Type":"AWS::ApiGateway::Stage",
-            "Properties":{
-                "DeploymentId":{
-                    "Ref":"ApiDeployment"
-                },
-                "RestApiId":{
-                    "Ref":"API"
-                },
-                "StageName":"production"
-            }
         },
         "ApiLambda":{
             "Type":"AWS::Lambda::Function",
@@ -685,7 +682,7 @@
             }
         },
         "GatewayLocation":{
-            "Value": {
+            "Value":{
                 "Fn::Join":[
                     "",
                     [
