@@ -1,420 +1,699 @@
 {
-    "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "osm-dash",
-    "Parameters": {
-        "GitSha": {
-            "Type": "String"
+    "AWSTemplateFormatVersion":"2010-09-09",
+    "Description":"osm-dash",
+    "Parameters":{
+        "GitSha":{
+            "Type":"String"
         },
-        "Bucket": {
-            "Type": "String",
-            "Default": ""
+        "Bucket":{
+            "Type":"String",
+            "Default":""
         },
-        "SlugPrefix": {
-            "Type": "String",
-            "Default": "slugs/osm-dash/"
+        "SlugPrefix":{
+            "Type":"String",
+            "Default":"slugs/osm-dash/"
         },
-        "OutputPrefix": {
-            "Type": "String",
-            "Default": "osm-dash/"
+        "OutputPrefix":{
+            "Type":"String",
+            "Default":"osm-dash/"
         },
-        "Environment": {
-            "Type": "String",
-            "Default": "staging"
+        "Environment":{
+            "Type":"String",
+            "Default":"staging"
         },
-        "ReplicationPath": {
-            "Type": "String",
-            "Default": "http://planet.osm.org/replication/"
+        "ReplicationPath":{
+            "Type":"String",
+            "Default":"http://planet.osm.org/replication/"
         }
     },
-    "Resources": {
-        "LambdaRole": {
-            "Type": "AWS::IAM::Role",
-            "Properties": {
-                "AssumeRolePolicyDocument": {
-                    "Statement": [{
-                        "Effect": "Allow",
-                        "Principal": {
-                            "Service": "lambda.amazonaws.com"
-                        },
-                        "Action": "sts:AssumeRole"
-                    }]
+    "Resources":{
+        "LambdaRole":{
+            "Type":"AWS::IAM::Role",
+            "Properties":{
+                "AssumeRolePolicyDocument":{
+                    "Statement":[
+                        {
+                            "Effect":"Allow",
+                            "Principal":{
+                                "Service":"lambda.amazonaws.com"
+                            },
+                            "Action":"sts:AssumeRole"
+                        }
+                    ]
                 },
-                "Path": "/stack/lambda/",
-                "Policies": [{
-                    "PolicyName": "osm-dash",
-                    "PolicyDocument": {
-                        "Statement": [{
-                            "Action": [
-                                "dynamodb:*"
-                            ],
-                            "Effect": "Allow",
-                            "Resource": {
-                                "Fn::GetAtt": [
-                                    "MainTable",
-                                    "Arn"
-                                ]
-                            }
-                        }, {
-                            "Action": [
-                                "cloudwatch:PutMetricData",
-                                "cloudwatch:GetMetricStatistics"
-                            ],
-                            "Effect": "Allow",
-                            "Resource": "*"
-                        }, {
-                            "Effect": "Allow",
-                            "Action": [
-                                "logs:*"
-                            ],
-                            "Resource": "arn:aws:logs:*:*:*"
-                        }, {
-                            "Effect": "Allow",
-                            "Action": [
-                                "s3:DeleteObject",
-                                "s3:GetObject",
-                                "s3:GetObjectAcl",
-                                "s3:PutObject",
-                                "s3:PutObjectAcl"
-                            ],
-                            "Resource": [{
-                                "Fn::Join": [
-                                    "", [
-                                        "arn:aws:s3:::",
-                                        {
-                                            "Ref": "Bucket"
-                                        },
-                                        "/osm-dash/*"
-                                    ]
-                                ]
-                            }]
-                        }, {
-                            "Action": [
-                                "sqs:ChangeMessageVisibility",
-                                "sqs:ChangeMessageVisibilityBatch",
-                                "sqs:DeleteMessage",
-                                "sqs:ReceiveMessage",
-                                "sqs:SendMessage",
-                                "sqs:SendMessageBatch"
-                            ],
-                            "Effect": "Allow",
-                            "Resource": {
-                                "Fn::GetAtt": [
-                                    "fastQueue",
-                                    "Arn"
-                                ]
-                            }
-                        }, {
-                            "Action": [
-                                "sqs:ChangeMessageVisibility",
-                                "sqs:ChangeMessageVisibilityBatch",
-                                "sqs:DeleteMessage",
-                                "sqs:ReceiveMessage",
-                                "sqs:SendMessage",
-                                "sqs:SendMessageBatch"
-                            ],
-                            "Effect": "Allow",
-                            "Resource": {
-                                "Fn::GetAtt": [
-                                    "slowQueue",
-                                    "Arn"
-                                ]
-                            }
-                        }]
-                    }
-                }]
-            }
-        },
-        "FetcherLambda": {
-            "Type": "AWS::Lambda::Function",
-            "Properties": {
-                "Description": "Fetches, parses, and writes metrics for the current minutely OSM file, every minute.",
-                "Code": {
-                    "S3Bucket": {
-                        "Ref": "Bucket"
-                    },
-                    "S3Key": {
-                        "Fn::Join": [
-                            "", [{
-                                    "Ref": "SlugPrefix"
+                "Path":"/stack/lambda/",
+                "Policies":[
+                    {
+                        "PolicyName":"granular-processing",
+                        "PolicyDocument":{
+                            "Statement":[
+                                {
+                                    "Action":[
+                                        "dynamodb:*"
+                                    ],
+                                    "Effect":"Allow",
+                                    "Resource":{
+                                        "Fn::GetAtt":[
+                                            "MainTable",
+                                            "Arn"
+                                        ]
+                                    }
                                 },
                                 {
-                                    "Ref": "GitSha"
+                                    "Action":[
+                                        "cloudwatch:PutMetricData",
+                                        "cloudwatch:GetMetricStatistics"
+                                    ],
+                                    "Effect":"Allow",
+                                    "Resource":"*"
+                                },
+                                {
+                                    "Effect":"Allow",
+                                    "Action":[
+                                        "logs:*"
+                                    ],
+                                    "Resource":"arn:aws:logs:*:*:*"
+                                },
+                                {
+                                    "Effect":"Allow",
+                                    "Action":[
+                                        "s3:DeleteObject",
+                                        "s3:GetObject",
+                                        "s3:GetObjectAcl",
+                                        "s3:PutObject",
+                                        "s3:PutObjectAcl"
+                                    ],
+                                    "Resource":[
+                                        {
+                                            "Fn::Join":[
+                                                "",
+                                                [
+                                                    "arn:aws:s3:::",
+                                                    {
+                                                        "Ref":"Bucket"
+                                                    },
+                                                    "/osm-dash/*"
+                                                ]
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "Action":[
+                                        "sqs:ChangeMessageVisibility",
+                                        "sqs:ChangeMessageVisibilityBatch",
+                                        "sqs:DeleteMessage",
+                                        "sqs:ReceiveMessage",
+                                        "sqs:SendMessage",
+                                        "sqs:SendMessageBatch"
+                                    ],
+                                    "Effect":"Allow",
+                                    "Resource":{
+                                        "Fn::GetAtt":[
+                                            "fastQueue",
+                                            "Arn"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "Action":[
+                                        "sqs:ChangeMessageVisibility",
+                                        "sqs:ChangeMessageVisibilityBatch",
+                                        "sqs:DeleteMessage",
+                                        "sqs:ReceiveMessage",
+                                        "sqs:SendMessage",
+                                        "sqs:SendMessageBatch"
+                                    ],
+                                    "Effect":"Allow",
+                                    "Resource":{
+                                        "Fn::GetAtt":[
+                                            "slowQueue",
+                                            "Arn"
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "ApiRole":{
+            "Type":"AWS::IAM::Role",
+            "Properties":{
+                "AssumeRolePolicyDocument":{
+                    "Statement":[
+                        {
+                            "Effect":"Allow",
+                            "Principal":{
+                                "Service":"lambda.amazonaws.com"
+                            },
+                            "Action":"sts:AssumeRole"
+                        }
+                    ]
+                },
+                "Path":"/stack/lambda/",
+                "Policies":[
+                    {
+                        "PolicyName":"granular-processing",
+                        "PolicyDocument":{
+                            "Statement":[
+                                {
+                                    "Action":[
+                                        "dynamodb:*"
+                                    ],
+                                    "Effect":"Allow",
+                                    "Resource":{
+                                        "Fn::GetAtt":[
+                                            "MainTable",
+                                            "Arn"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "Effect":"Allow",
+                                    "Action":[
+                                        "logs:*"
+                                    ],
+                                    "Resource":"arn:aws:logs:*:*:*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "API":{
+            "Type":"AWS::ApiGateway::RestApi",
+            "Properties":{
+                "Body":{
+                    "swagger":"2.0",
+                    "basePath":"/prod",
+                    "schemes":[
+                        "http"
+                    ],
+                    "paths":{
+                        "/":{
+                            "get":{
+                                "responses":{
+                                    "200":{
+                                        "description":"200 response"
+                                    }
+                                },
+                                "x-amazon-apigateway-integration":{
+                                    "responses":{
+                                        "default":{
+                                            "statusCode":"200"
+                                        }
+                                    },
+                                    "uri":{
+                                        "Fn::Join":[
+                                            "",
+                                            [
+                                                "arn:aws:apigateway:",
+                                                {
+                                                    "Ref":"AWS::Region"
+                                                },
+                                                ":lambda:path/2015-03-31/functions/",
+                                                {
+                                                    "Fn::GetAtt":[
+                                                        "ApiLambda",
+                                                        "Arn"
+                                                    ]
+                                                },
+                                                "/invocations"
+                                            ]
+                                        ]
+                                    },
+                                    "passthroughBehavior":"when_no_match",
+                                    "httpMethod":"POST",
+                                    "type":"aws_proxy"
+                                }
+                            }
+                        }
+                    }
+                },
+                "Name":{
+                    "Fn::Join":[
+                        "",
+                        [
+                            "api-granular-",
+                            {
+                                "Ref":"Environment"
+                            }
+                        ]
+                    ]
+                },
+                "Description":"Responds to requests for data in dynamo",
+                "EndpointConfiguration":{
+                    "Types":[
+                        "REGIONAL"
+                    ]
+                }
+            },
+            "DependsOn":"ApiLambda"
+        },
+        "ApiDeployment":{
+            "Type":"AWS::ApiGateway::Deployment",
+            "Properties":{
+                "RestApiId":{
+                    "Ref":"API"
+                },
+                "StageDescription":{
+                    "Description":{
+                        "Ref":"GitSha"
+                    },
+                    "MetricsEnabled":"true"
+                },
+                "StageName":{
+                    "Ref":"Environment"
+                }
+            },
+            "DependsOn":"API"
+        },
+        "ApiLambda":{
+            "Type":"AWS::Lambda::Function",
+            "Properties":{
+                "Description":"Responds to requests for data in dynamo",
+                "Code":{
+                    "S3Bucket":{
+                        "Ref":"Bucket"
+                    },
+                    "S3Key":{
+                        "Fn::Join":[
+                            "",
+                            [
+                                {
+                                    "Ref":"SlugPrefix"
+                                },
+                                {
+                                    "Ref":"GitSha"
                                 },
                                 ".zip"
                             ]
                         ]
                     }
                 },
-                "FunctionName": {
-                    "Fn::Join": [
-                        "", [
-                            "osm-dash-fetcher-",
+                "FunctionName":{
+                    "Fn::Join":[
+                        "",
+                        [
+                            "osm-dash-api-",
                             {
-                                "Ref": "Environment"
+                                "Ref":"Environment"
                             }
                         ]
                     ]
                 },
-                "Handler": "fetcher.handler",
-                "Runtime": "nodejs6.10",
-                "Timeout": 150,
-                "MemorySize": 128,
-                "Role": {
-                    "Fn::GetAtt": [
-                        "LambdaRole",
+                "Handler":"api.handler",
+                "Runtime":"nodejs6.10",
+                "Timeout":5,
+                "MemorySize":128,
+                "Role":{
+                    "Fn::GetAtt":[
+                        "ApiRole",
                         "Arn"
                     ]
                 },
-                "Environment": {
-                    "Variables": {
-                        "Bucket": {
-                            "Ref": "Bucket"
+                "Environment":{
+                    "Variables":{
+                        "Bucket":{
+                            "Ref":"Bucket"
                         },
-                        "GitSha": {
-                            "Ref": "GitSha"
+                        "GitSha":{
+                            "Ref":"GitSha"
                         },
-                        "Environment": {
-                            "Ref": "Environment"
+                        "Environment":{
+                            "Ref":"Environment"
                         },
-                        "ReplicationPath": {
-                            "Ref": "ReplicationPath"
-                        },
-                        "MainTable": {
-                            "Ref": "MainTable"
-                        },
-                        "fastQueue": {
-                            "Ref": "fastQueue"
-                        },
-                        "slowQueue": {
-                            "Ref": "slowQueue"
+                        "MainTable":{
+                            "Ref":"MainTable"
                         }
                     }
                 }
             }
         },
-        "FetcherInvokePermissions": {
-            "Type": "AWS::Lambda::Permission",
-            "Properties": {
-                "Action": "lambda:InvokeFunction",
-                "FunctionName": {
-                    "Fn::GetAtt": [
+        "APIInvokePermissions":{
+            "Type":"AWS::Lambda::Permission",
+            "Properties":{
+                "Action":"lambda:InvokeFunction",
+                "FunctionName":{
+                    "Fn::GetAtt":[
+                        "ApiLambda",
+                        "Arn"
+                    ]
+                },
+                "Principal":"apigateway.amazonaws.com",
+                "SourceArn":{
+                    "Fn::Join":[
+                        "",
+                        [
+                            "arn:aws:execute-api:",
+                            {
+                                "Ref":"AWS::Region"
+                            },
+                            ":",
+                            {
+                                "Ref":"AWS::AccountId"
+                            },
+                            ":",
+                            {
+                                "Ref":"API"
+                            },
+                            "/*/GET/"
+                        ]
+                    ]
+                }
+            }
+        },
+        "FetcherLambda":{
+            "Type":"AWS::Lambda::Function",
+            "Properties":{
+                "Description":"Fetches, parses, and writes metrics for the current minutely OSM file, every minute.",
+                "Code":{
+                    "S3Bucket":{
+                        "Ref":"Bucket"
+                    },
+                    "S3Key":{
+                        "Fn::Join":[
+                            "",
+                            [
+                                {
+                                    "Ref":"SlugPrefix"
+                                },
+                                {
+                                    "Ref":"GitSha"
+                                },
+                                ".zip"
+                            ]
+                        ]
+                    }
+                },
+                "FunctionName":{
+                    "Fn::Join":[
+                        "",
+                        [
+                            "osm-dash-fetcher-",
+                            {
+                                "Ref":"Environment"
+                            }
+                        ]
+                    ]
+                },
+                "Handler":"fetcher.handler",
+                "Runtime":"nodejs6.10",
+                "Timeout":150,
+                "MemorySize":128,
+                "Role":{
+                    "Fn::GetAtt":[
+                        "LambdaRole",
+                        "Arn"
+                    ]
+                },
+                "Environment":{
+                    "Variables":{
+                        "Bucket":{
+                            "Ref":"Bucket"
+                        },
+                        "GitSha":{
+                            "Ref":"GitSha"
+                        },
+                        "Environment":{
+                            "Ref":"Environment"
+                        },
+                        "ReplicationPath":{
+                            "Ref":"ReplicationPath"
+                        },
+                        "MainTable":{
+                            "Ref":"MainTable"
+                        },
+                        "fastQueue":{
+                            "Ref":"fastQueue"
+                        },
+                        "slowQueue":{
+                            "Ref":"slowQueue"
+                        }
+                    }
+                }
+            }
+        },
+        "FetcherInvokePermissions":{
+            "Type":"AWS::Lambda::Permission",
+            "Properties":{
+                "Action":"lambda:InvokeFunction",
+                "FunctionName":{
+                    "Fn::GetAtt":[
                         "FetcherLambda",
                         "Arn"
                     ]
                 },
-                "Principal": "events.amazonaws.com",
-                "SourceArn": {
-                    "Fn::GetAtt": [
+                "Principal":"events.amazonaws.com",
+                "SourceArn":{
+                    "Fn::GetAtt":[
                         "FetcherLambdaTrigger",
                         "Arn"
                     ]
                 }
             }
         },
-        "FetcherLambdaTrigger": {
-            "Type": "AWS::Events::Rule",
-            "Properties": {
-                "ScheduleExpression": "rate(1 minute)",
-                "State": "ENABLED",
-                "Targets": [{
-                    "Id": "FetcherLambda",
-                    "Arn": {
-                        "Fn::GetAtt": [
-                            "FetcherLambda",
-                            "Arn"
-                        ]
+        "FetcherLambdaTrigger":{
+            "Type":"AWS::Events::Rule",
+            "Properties":{
+                "ScheduleExpression":"rate(1 minute)",
+                "State":"ENABLED",
+                "Targets":[
+                    {
+                        "Id":"FetcherLambda",
+                        "Arn":{
+                            "Fn::GetAtt":[
+                                "FetcherLambda",
+                                "Arn"
+                            ]
+                        }
                     }
-                }]
+                ]
             }
         },
-        "AggregatorLambda": {
-            "Type": "AWS::Lambda::Function",
-            "Description": "Aggregates metrics spanning various time ranges.",
-            "Properties": {
-                "Code": {
-                    "S3Bucket": {
-                        "Ref": "Bucket"
+        "AggregatorLambda":{
+            "Type":"AWS::Lambda::Function",
+            "Description":"Aggregates metrics spanning various time ranges.",
+            "Properties":{
+                "Code":{
+                    "S3Bucket":{
+                        "Ref":"Bucket"
                     },
-                    "S3Key": {
-                        "Fn::Join": [
-                            "", [{
-                                    "Ref": "SlugPrefix"
+                    "S3Key":{
+                        "Fn::Join":[
+                            "",
+                            [
+                                {
+                                    "Ref":"SlugPrefix"
                                 },
                                 {
-                                    "Ref": "GitSha"
+                                    "Ref":"GitSha"
                                 },
                                 ".zip"
                             ]
                         ]
                     }
                 },
-                "FunctionName": {
-                    "Fn::Join": [
-                        "", [
+                "FunctionName":{
+                    "Fn::Join":[
+                        "",
+                        [
                             "osm-dash-aggregator-",
                             {
-                                "Ref": "Environment"
+                                "Ref":"Environment"
                             }
                         ]
                     ]
                 },
-                "Handler": "aggregator.handler",
-                "Runtime": "nodejs6.10",
-                "Timeout": 300,
-                "MemorySize": 128,
-                "Role": {
-                    "Fn::GetAtt": [
+                "Handler":"aggregator.handler",
+                "Runtime":"nodejs6.10",
+                "Timeout":300,
+                "MemorySize":128,
+                "Role":{
+                    "Fn::GetAtt":[
                         "LambdaRole",
                         "Arn"
                     ]
                 },
-                "Environment": {
-                    "Variables": {
-                        "Bucket": {
-                            "Ref": "Bucket"
+                "Environment":{
+                    "Variables":{
+                        "Bucket":{
+                            "Ref":"Bucket"
                         },
-                        "GitSha": {
-                            "Ref": "GitSha"
+                        "GitSha":{
+                            "Ref":"GitSha"
                         },
-                        "Environment": {
-                            "Ref": "Environment"
+                        "Environment":{
+                            "Ref":"Environment"
                         },
-                        "MainTable": {
-                            "Ref": "MainTable"
+                        "MainTable":{
+                            "Ref":"MainTable"
                         },
-                        "fastQueue": {
-                            "Ref": "fastQueue"
+                        "fastQueue":{
+                            "Ref":"fastQueue"
                         },
-                        "slowQueue": {
-                            "Ref": "slowQueue"
+                        "slowQueue":{
+                            "Ref":"slowQueue"
                         }
                     }
                 }
             }
         },
-        "MainTable": {
-            "Type": "AWS::DynamoDB::Table",
-            "Properties": {
-                "AttributeDefinitions": [{
-                    "AttributeName": "parent",
-                    "AttributeType": "S"
-                }, {
-                    "AttributeName": "sequence",
-                    "AttributeType": "N"
-                }],
-                "KeySchema": [{
-                    "AttributeName": "parent",
-                    "KeyType": "HASH"
-                }, {
-                    "AttributeName": "sequence",
-                    "KeyType": "RANGE"
-                }],
-                "ProvisionedThroughput": {
-                    "ReadCapacityUnits": 1,
-                    "WriteCapacityUnits": 1
+        "MainTable":{
+            "Type":"AWS::DynamoDB::Table",
+            "Properties":{
+                "AttributeDefinitions":[
+                    {
+                        "AttributeName":"parent",
+                        "AttributeType":"S"
+                    },
+                    {
+                        "AttributeName":"sequence",
+                        "AttributeType":"N"
+                    }
+                ],
+                "KeySchema":[
+                    {
+                        "AttributeName":"parent",
+                        "KeyType":"HASH"
+                    },
+                    {
+                        "AttributeName":"sequence",
+                        "KeyType":"RANGE"
+                    }
+                ],
+                "ProvisionedThroughput":{
+                    "ReadCapacityUnits":1,
+                    "WriteCapacityUnits":1
                 }
             }
         },
-        "fastQueue": {
-            "Type": "AWS::SQS::Queue",
-            "Properties": {
-                "MessageRetentionPeriod": 1209600
+        "fastQueue":{
+            "Type":"AWS::SQS::Queue",
+            "Properties":{
+                "MessageRetentionPeriod":1209600
             }
         },
-        "slowQueue": {
-            "Type": "AWS::SQS::Queue",
-            "Properties": {
-                "MessageRetentionPeriod": 1209600
+        "slowQueue":{
+            "Type":"AWS::SQS::Queue",
+            "Properties":{
+                "MessageRetentionPeriod":1209600
             }
         },
-        "minInvokePermissions": {
-            "Type": "AWS::Lambda::Permission",
-            "Properties": {
-                "Action": "lambda:InvokeFunction",
-                "FunctionName": {
-                    "Fn::GetAtt": [
+        "minInvokePermissions":{
+            "Type":"AWS::Lambda::Permission",
+            "Properties":{
+                "Action":"lambda:InvokeFunction",
+                "FunctionName":{
+                    "Fn::GetAtt":[
                         "AggregatorLambda",
                         "Arn"
                     ]
                 },
-                "Principal": "events.amazonaws.com",
-                "SourceArn": {
-                    "Fn::GetAtt": [
+                "Principal":"events.amazonaws.com",
+                "SourceArn":{
+                    "Fn::GetAtt":[
                         "minAggregatorTrigger",
                         "Arn"
                     ]
                 }
             }
         },
-        "minAggregatorTrigger": {
-            "Type": "AWS::Events::Rule",
-            "Properties": {
-                "ScheduleExpression": "rate(1 minute)",
-                "State": "ENABLED",
-                "Targets": [{
-                    "Id": "AggregatorLambda",
-                    "Input": "{\"source\":\"minTrigger\"}",
-                    "Arn": {
-                        "Fn::GetAtt": [
-                            "AggregatorLambda",
-                            "Arn"
-                        ]
+        "minAggregatorTrigger":{
+            "Type":"AWS::Events::Rule",
+            "Properties":{
+                "ScheduleExpression":"rate(1 minute)",
+                "State":"ENABLED",
+                "Targets":[
+                    {
+                        "Id":"AggregatorLambda",
+                        "Input":"{\"source\":\"minTrigger\"}",
+                        "Arn":{
+                            "Fn::GetAtt":[
+                                "AggregatorLambda",
+                                "Arn"
+                            ]
+                        }
                     }
-                }]
+                ]
             }
         },
-        "tenMinInvokePermissions": {
-            "Type": "AWS::Lambda::Permission",
-            "Properties": {
-                "Action": "lambda:InvokeFunction",
-                "FunctionName": {
-                    "Fn::GetAtt": [
+        "tenMinInvokePermissions":{
+            "Type":"AWS::Lambda::Permission",
+            "Properties":{
+                "Action":"lambda:InvokeFunction",
+                "FunctionName":{
+                    "Fn::GetAtt":[
                         "AggregatorLambda",
                         "Arn"
                     ]
                 },
-                "Principal": "events.amazonaws.com",
-                "SourceArn": {
-                    "Fn::GetAtt": [
+                "Principal":"events.amazonaws.com",
+                "SourceArn":{
+                    "Fn::GetAtt":[
                         "tenMinAggregatorTrigger",
                         "Arn"
                     ]
                 }
             }
         },
-        "tenMinAggregatorTrigger": {
-            "Type": "AWS::Events::Rule",
-            "Properties": {
-                "ScheduleExpression": "rate(10 minutes)",
-                "State": "ENABLED",
-                "Targets": [{
-                    "Id": "AggregatorLambda",
-                    "Input": "{\"source\":\"tenMinTrigger\"}",
-                    "Arn": {
-                        "Fn::GetAtt": [
-                            "AggregatorLambda",
-                            "Arn"
-                        ]
+        "tenMinAggregatorTrigger":{
+            "Type":"AWS::Events::Rule",
+            "Properties":{
+                "ScheduleExpression":"rate(10 minutes)",
+                "State":"ENABLED",
+                "Targets":[
+                    {
+                        "Id":"AggregatorLambda",
+                        "Input":"{\"source\":\"tenMinTrigger\"}",
+                        "Arn":{
+                            "Fn::GetAtt":[
+                                "AggregatorLambda",
+                                "Arn"
+                            ]
+                        }
                     }
-                }]
+                ]
             }
         }
     },
-    "Outputs": {
-        "SlugLocation": {
-            "Value": {
-                "Fn::Join": [
-                    "", [{
-                            "Ref": "Bucket"
+    "Outputs":{
+        "SlugLocation":{
+            "Value":{
+                "Fn::Join":[
+                    "",
+                    [
+                        {
+                            "Ref":"Bucket"
                         },
                         "/",
                         {
-                            "Ref": "SlugPrefix"
+                            "Ref":"SlugPrefix"
                         },
                         {
-                            "Ref": "GitSha"
+                            "Ref":"GitSha"
                         },
                         ".zip"
+                    ]
+                ]
+            }
+        },
+        "GatewayLocation":{
+            "Value":{
+                "Fn::Join":[
+                    "",
+                    [
+                        "arn:aws:apigateway:",
+                        {
+                            "Ref":"AWS::Region"
+                        },
+                        ":lambda:path/2015-03-31/functions/",
+                        {
+                            "Ref":"ApiLambda"
+                        }
                     ]
                 ]
             }

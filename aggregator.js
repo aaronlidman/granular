@@ -62,7 +62,7 @@ function getMessage(context) {
             context.message = JSON.parse(data.Body);
             context.message.ReceiptHandle = data.ReceiptHandle;
             context.message.MD5OfBody = data.MD5OfBody;
-            context.message.key = isotrunc.to(context.message.key, context.message.jobType);
+            context.message.key = isotrunc(context.message.key).to(context.message.jobType);
             resolve(context);
         }).catch(reject);
     });
@@ -91,7 +91,7 @@ function resetContext(context) {
 
 function getChildren(context) {
     return new Promise((resolve, reject) => {
-        request.children(context.message.key)
+        request.countItems(context.message.key)
             .then(children => {
                 context.message.children = children;
                 return context;

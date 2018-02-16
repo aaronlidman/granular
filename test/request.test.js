@@ -56,11 +56,11 @@ test('getGzipStream', t => {
     t.end();
 });
 
-test('request.children', t => {
+test('request.countItems', t => {
     AWS.mock('DynamoDB', 'query', function (params, callback) {
         const data = {};
 
-        if (params.ExpressionAttributeValues[':parent'].S === 'withChildren') {
+        if (params.ExpressionAttributeValues[':parent'].S === 'withItems') {
             data.Items = [1, 2];
         } else {
             data.Items = [];
@@ -71,16 +71,19 @@ test('request.children', t => {
 
     process.env.MainTable = 'MainTable';
 
-    request.children('withChildren')
+    request.countItems('withItems')
         .then(result => {
             t.deepEqual(result, [1, 2], 'data is as expected');
         })
         .catch(t.error)
         .then(() => {
-            return request.children('withoutChildren');
+            return request.countItems('withoutItems');
         })
         .catch(err => {
-            t.equal(err.name, 'NoChildren', 'caught expected error');
+            t.equal(err.name, 'NoItems', 'caught expected error');
         })
-        .then(t.end);
+        .then(() => {
+            AWS.restore('DynamoDB');
+            t.end();
+        });
 });

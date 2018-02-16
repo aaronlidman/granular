@@ -3,37 +3,129 @@
 const test = require('tape');
 const isotrunc = require('../lib/isotrunc.js');
 
-['2017-01-02T03:04:05.678Z', new Date().toISOString()].forEach(example => {
-    const year = isotrunc.to(example, 'year');
-    const month = isotrunc.to(example, 'month');
-    const day = isotrunc.to(example, 'day');
-    const hour = isotrunc.to(example, 'hour');
-    const minute = isotrunc.to(example, 'minute');
+const fixtures = {
+    '2018': {
+        'to': {
+            'year': '2018'
+        },
+        'unit': 'year',
+        'parent': '2018',
+        'sequence': undefined
+    },
+    '2018-10': {
+        'to': {
+            'year': '2018',
+            'month': '2018-10'
+        },
+        'unit': 'month',
+        'parent': '2018',
+        'sequence': 10
+    },
+    '2018-10-20': {
+        'to': {
+            'year': '2018',
+            'month': '2018-10',
+            'day': '2018-10-20'
+        },
+        'unit': 'day',
+        'parent': '2018-10',
+        'sequence': 20
+    },
+    '2018-10-20T12': {
+        'to': {
+            'year': '2018',
+            'month': '2018-10',
+            'day': '2018-10-20',
+            'hour': '2018-10-20T12'
+        },
+        'unit': 'hour',
+        'parent': '2018-10-20',
+        'sequence': 12
+    },
+    '2018-10-20T12:05': {
+        'to': {
+            'year': '2018',
+            'month': '2018-10',
+            'day': '2018-10-20',
+            'hour': '2018-10-20T12',
+            'minute': '2018-10-20T12:05'
+        },
+        'unit': 'minute',
+        'parent': '2018-10-20T12',
+        'sequence': 5
+    },
+    '2018-10-20T12:05:26': {
+        'to': {
+            'year': '2018',
+            'month': '2018-10',
+            'day': '2018-10-20',
+            'hour': '2018-10-20T12',
+            'minute': '2018-10-20T12:05'
+        },
+        'unit': 'minute',
+        'parent': '2018-10-20T12',
+        'sequence': 5
+    },
+    '2018-10-20T12:05:26.277Z': {
+        'to': {
+            'year': '2018',
+            'month': '2018-10',
+            'day': '2018-10-20',
+            'hour': '2018-10-20T12',
+            'minute': '2018-10-20T12:05'
+        },
+        'unit': 'minute',
+        'parent': '2018-10-20T12',
+        'sequence': 5
+    }
+};
 
-    test('isotrunc.to ' + example, t => {
-        t.equal(year, example.slice(0, 4));
-        t.equal(month, example.slice(0, 7));
-        t.equal(day, example.slice(0, 10));
-        t.equal(hour, example.slice(0, 13));
-        t.equal(minute, example.slice(0, 16));
-        t.end();
-    });
+test('throw error on no input', t => {
+    try {
+        isotrunc();
+    } catch (e) {
+        t.equal(e.message, 'Must specify an ISOString to truncate');
+    }
 
-    test('isotrunc.parent ' + example, t => {
-        t.equal(isotrunc.parent(year), example.slice(0, 4));
-        t.equal(isotrunc.parent(month), isotrunc.to(example, 'year'));
-        t.equal(isotrunc.parent(day), isotrunc.to(example, 'month'));
-        t.equal(isotrunc.parent(hour), isotrunc.to(example, 'day'));
-        t.equal(isotrunc.parent(minute), isotrunc.to(example, 'hour'));
-        t.end();
-    });
+    t.end();
+});
 
-    test('isotrunc.unit ' + example, t => {
-        t.equal(isotrunc.unit(year), 'year');
-        t.equal(isotrunc.unit(month), 'month');
-        t.equal(isotrunc.unit(day), 'day');
-        t.equal(isotrunc.unit(hour), 'hour');
-        t.equal(isotrunc.unit(minute), 'minute');
-        t.end();
-    });
+test('isotrunc.to', t => {
+    for (const fixture in fixtures) {
+        for (const unit in fixtures[fixture].to) {
+            t.equal(isotrunc(fixture).to(unit), fixtures[fixture].to[unit], fixture + ' to ' + unit);
+        }
+    }
+    t.end();
+});
+
+test('isotrunc.unit', t => {
+    for (const fixture in fixtures) {
+        t.equal(isotrunc(fixture).unit(), fixtures[fixture].unit, fixture + ' unit');
+    }
+    t.end();
+});
+
+test('isotrunc.parent', t => {
+    for (const fixture in fixtures) {
+        t.equal(isotrunc(fixture).parent(), fixtures[fixture].parent, fixture + ' parent');
+    }
+    t.end();
+});
+
+test('isotrunc.sequence', t => {
+    for (const fixture in fixtures) {
+        t.equal(isotrunc(fixture).sequence(), fixtures[fixture].sequence, fixture + ' sequence');
+    }
+    t.end();
+});
+
+test('isotrunc.parts', t => {
+    for (const fixture in fixtures) {
+        t.deepEqual(isotrunc(fixture).parts(), {
+            parent: isotrunc(fixture).parent(),
+            sequence: isotrunc(fixture).sequence()
+        }, fixture + ' parts');
+    }
+    t.end();
 });
